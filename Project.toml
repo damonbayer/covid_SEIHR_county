@@ -1,0 +1,11 @@
+name = "covid_SEIHR_county"
+uuid = "75cd52df-64de-48df-8349-808e4e6046ea"
+authors = ["Damon Bayer <damon@damonbayer.com>"]
+version = "0.1.0"
+
+[deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+LogExpFunctions = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
+Turing = "fce5fe82-541a-59a6-adf8-730c64b5f9a0"
