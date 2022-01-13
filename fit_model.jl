@@ -6,7 +6,7 @@ using DifferentialEquations
 using LogExpFunctions
 using Random
 results_dir = "//dfs6/pub/bayerd/covid_SEIHR_county/results/"
-mkdir(results_dir)
+mkpath(results_dir)
 
 county = subset(CSV.read("data/county_id_key.csv", DataFrame), :id => ByRow(x -> x == county_id))[1, :county]
 
@@ -92,8 +92,8 @@ data_hospitalizations = dat[:, :hospitalizations]
   case_detection_rate = logistic(case_detection_rate_non_centered * 0.2 - 1.4)
 
 
-  E_init = E_init_non_centered * 0.5 + news_cases_t_0 * 5 / 3 # range: new_cases_in_week_prior_to_model_start * (5/6, 20/6)
-  I_init = I_init_non_centered * 0.5 + news_cases_t_0 * 10 / 3 # range: new_cases_in_week_prior_to_model_start * (5/3, 20/3)
+  E_init = E_init_non_centered * 0.5 + news_cases_t_0 * 5 / 3 # new_cases_in_week_prior_to_model_start * (5/6, 20/6)
+  I_init = I_init_non_centered * 0.5 + news_cases_t_0 * 10 / 3 # new_cases_in_week_prior_to_model_start * (5/3, 20/3)
   # E_init = news_cases_t_0 * 5 / 3
   # I_init = news_cases_t_0 * 10 / 3
   H_init = hospitalizations_t_0

@@ -1,5 +1,6 @@
 library(gridExtra)
 library(tidyverse)
+library(scales)
 library(tidybayes)
 library(fs)
 library(cowplot)
@@ -19,7 +20,7 @@ dat_tidy <-
   pivot_longer(-c(date, county))
 
 posterior_predictive_intervals <-
-  dir_ls("results") %>%
+  dir_ls("//dfs6/pub/bayerd/covid_SEIHR_county/results") %>%
   enframe(name = NULL, value = "full_path") %>%
   mutate(file_name = full_path %>%
            path_file() %>%
@@ -82,9 +83,22 @@ plot_tibble <-
   tibble(county_name = unique(posterior_predictive_intervals$county)) %>%
   mutate(plot_obj = map(county_name, make_plot))
 
-plot_tibble$plot_obj[[2]]
-
 ggsave2(filename = "plots.pdf",
         plot = marrangeGrob(plot_tibble$plot_obj, nrow=1, ncol=1),
         width = 11,
         height = 8.5)
+
+prior_gq_samples <- read_csv("results/prior_gq_samples.csv")
+
+prior_plot <-
+  prior_gq_samples %>%
+  pivot_longer(-c(iteration, chain)) %>%
+  ggplot(aes(value)) +
+  facet_wrap(. ~ name, scales = "free") +
+  stat_halfeye(normalize = "panels") +
+  cowplot::theme_cowplot() +
+  labs(title = "Model Priors",
+       x = NULL,
+       y = NULL)
+
+ggsave2(filename = "prior_plot.pdf", plot = prior_plot)
