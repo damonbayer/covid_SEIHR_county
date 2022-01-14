@@ -2,6 +2,17 @@ library(tidyverse)
 library(ckanr)
 library(lubridate)
 
+case_reporting_delay_ecdf <- read_rds("case_reporting_delay_ecdf.rds")
+
+variants_dat <- read_tsv("https://raw.githubusercontent.com/blab/rt-from-frequency-dynamics/master/data/omicron-us/omicron-us_location-variant-sequence-counts.tsv") %>%
+  filter(location == "California") %>%
+  select(-location) %>%
+  group_by(date) %>%
+  summarize(variant = variant,
+            prop = sequences / sum(sequences)) %>%
+  filter(variant == "Omicron") %>%
+  select(date, prop_omicron = prop)
+
 quiet <- function(x) {
   sink(tempfile())
   on.exit(sink())
@@ -60,36 +71,51 @@ hosp <-
 
 county_pop <- read_csv("data/county_pop.csv") %>% rename_all(str_to_lower)
 
-# case_reporting_delay_ecdf <- read_rds("/Users/damon/Documents/covid_SEIHR_county/case_reporting_delay_ecdf.rds")
-#
-# case_reporting_delay_ecdf(7)
-#
-#
-# tibble(delay = 1:30,
-#        prop_reported = case_reporting_delay_ecdf(delay)) %>%
-#   ggplot(aes(delay, prop_reported)) +
-#   geom_line() +
-#   geom_point() +
-#   scale_y_continuous(labels = scales::percent) +
-#   scale_x_continuous(breaks = seq(0,28, by = 7)) +
-#   cowplot::theme_minimal_grid()
-
-
 full_dat <- full_join(cases, hosp) %>%
   select(date, county, cases, hospitalized_covid_patients)
+
+
+latest_date <- max(full_dat$date, na.rm = T) + 1
+prop_omicron_model <- glm(prop_omicron ~ bs(date), data = variants_dat, family = gaussian(link = "logit"))
+
+time_interval_in_days <- 3
 
 dat <-
   full_dat %>%
   drop_na() %>%
-  filter(date >= "2021-11-28") %>%
-  mutate(days_ago = as.numeric(max(date) - date)) %>%
-  filter(days_ago >= 6) %>%
-  filter(date >= days_ago[which(as.numeric(date - max(date)) %% 7 == 0)[1]]) %>%
-  mutate(time = floor(as.numeric(date - min(date)) / 7)) %>%
-  group_by(time, county) %>%
-  summarize(date = last(date),
+  filter(date >= "2021-12-12",
+         date <= latest_date - 6) %>%
+  mutate(days_ago = as.numeric(latest_date - date)) %>%
+  mutate(est_prop_reported = case_reporting_delay_ecdf(days_ago)) %>%
+  mutate(est_cases = round(cases / est_prop_reported)) %>%
+  mutate(lump = floor(as.numeric(date - min(date)) / time_interval_in_days) + 1) %>%
+  group_by(lump, county) %>%
+  summarize(time = lump[1] * time_interval_in_days / 7,
+            date = last(date),
             cases = sum(cases),
-            hospitalizations = last(hospitalized_covid_patients), .groups = "drop")
+            est_cases = sum(est_cases),
+            hospitalizations = last(hospitalized_covid_patients),
+            .groups = "drop") %>%
+  mutate(.,
+         prop_omicron_cases = predict(prop_omicron_model,
+                                      newdata = .,
+                                      type = "response"),
+         prop_omicron_hospitalizations = predict(prop_omicron_model,
+                                                 newdata = mutate(., date = date - 7),
+                                                 type = "response")) %>%
+  select(-lump)
+
+initialization_values <-
+  full_dat %>%
+  drop_na() %>%
+  filter(date >= min(dat$date) - time_interval_in_days - 6,
+         date <= min(dat$date) - time_interval_in_days) %>%
+  mutate(days_ago = as.numeric(latest_date - date)) %>%
+  mutate(est_prop_reported = case_reporting_delay_ecdf(days_ago)) %>%
+  mutate(est_cases = round(cases / est_prop_reported)) %>%
+  group_by(county) %>%
+  summarize(est_cases = sum(est_cases),
+            hospitalizations = last(hospitalized_covid_patients))
 
 
 county_id_key <-
@@ -100,4 +126,5 @@ county_id_key <-
   select(id, county)
 
 write_csv(dat, "data/cases_hospitalizations_by_county.csv")
+write_csv(initialization_values, "data/initialization_values.csv")
 write_csv(county_id_key, "data/county_id_key.csv")
