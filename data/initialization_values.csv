@@ -1,0 +1,57 @@
+county,est_cases,hospitalizations
+Alameda,1019,89
+Amador,30,6
+Butte,144,34
+Calaveras,68,3
+Colusa,9,2
+Contra Costa,792,47
+Del Norte,10,0
+El Dorado,172,10
+Fresno,1011,189
+Glenn,6,0
+Humboldt,152,16
+Imperial,509,64
+Inyo,29,2
+Kern,928,124
+Kings,233,27
+Lake,40,1
+Lassen,14,1
+Los Angeles,10290,789
+Madera,169,25
+Marin,191,8
+Mariposa,18,0
+Mendocino,90,5
+Merced,243,25
+Modoc,0,3
+Mono,33,0
+Monterey,352,27
+Napa,122,6
+Nevada,112,8
+Orange,2336,202
+Placer,376,101
+Plumas,30,1
+Riverside,3577,317
+Sacramento,1588,164
+San Benito,99,7
+San Bernardino,3524,414
+San Diego,4930,337
+San Francisco,646,49
+San Joaquin,695,73
+San Luis Obispo,254,12
+San Mateo,472,32
+Santa Barbara,463,41
+Santa Clara,1373,144
+Santa Cruz,249,12
+Shasta,167,27
+Siskiyou,21,3
+Solano,267,36
+Sonoma,423,24
+Stanislaus,620,126
+Sutter,91,0
+Tehama,42,9
+Trinity,2,0
+Tulare,395,79
+Tuolumne,66,5
+Ventura,819,54
+Yolo,173,2
+Yuba,89,18
