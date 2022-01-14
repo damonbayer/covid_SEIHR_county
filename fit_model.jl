@@ -35,13 +35,13 @@ function seir_ode_log!(du, u, p, t)
     (S, E, I, H, R, C) = exp.(u)
     (β, γ, ν, η, IHR) = p
     N = S + E + I + H + R
-  
+
     infection = β * I * S / N
     progression = γ * E
     hospitalization = ν * IHR * I
     non_hospitalized_recovery = ν * (1 - IHR) * I
     hospitalized_recovery = η * H
-  
+
     @inbounds begin
         du[1] = -infection / S # S
         du[2] = (infection - progression) / E # E
@@ -88,15 +88,15 @@ data_hospitalizations = dat[:, :hospitalizations]
   # dur_latent = exp(dur_latent_non_centered * 0.154 - 1.27)
   dur_latent = exp(dur_latent_non_centered * 0.25 - 1.27)
   γ = 1 / dur_latent
-  
+
   # dur_infectious = exp(dur_infectious_non_centered * 0.128 - 0.568)
   dur_infectious = exp(dur_infectious_non_centered * 0.25 - 0.568)
   ν = 1 / dur_infectious
 
   β = R₀ * ν
-  
+
   IHR = logistic(IHR_non_centered * 0.4 - 4.5)
-  
+
   # dur_hospitalized = exp(dur_hospitalized_non_centered * 0.101 - 0.342)
   dur_hospitalized = exp(dur_hospitalized_non_centered * 0.25 - 0.342)
   η = 1 / dur_hospitalized
@@ -113,7 +113,7 @@ data_hospitalizations = dat[:, :hospitalizations]
   H_init = hospitalizations_initial
   R_init = 1
   S_init = popsize - (E_init + I_init + H_init + R_init)
-  
+
   u0 = [S_init, E_init, I_init, H_init, R_init, I_init]
   p = [β, γ, ν, η, IHR]
   tspan = (0.0, ode_eval_times[end])
@@ -123,22 +123,22 @@ data_hospitalizations = dat[:, :hospitalizations]
           p)
 
   sol = solve(prob, Tsit5(), saveat=ode_eval_times, save_start = true)
-  
+
   if sol.retcode != :Success # If the ODE solver fails, reject the sample by adding -Inf to the likelihood
     Turing.@addlogprob! -Inf
     return
   end
-  
+
   ode_sol_array = exp.(Array(sol))
   latent_cases = ode_sol_array[6,2:end] - ode_sol_array[6,1:(end - 1)]
   latent_hospitalizations = ode_sol_array[4,2:end]
-  
-  for i in 1:l   
+
+  for i in 1:l
     data_new_cases[i] ~ NegativeBinomial2(max(latent_cases[i] * case_detection_rate, 0), ϕ_cases)
     data_hospitalizations[i] ~ NegativeBinomial2(max(latent_hospitalizations[i], 0), ϕ_hospitalizations)
   end
-  return(R₀ = R₀, 
-  dur_latent_days = dur_latent * 7, 
+  return(R₀ = R₀,
+  dur_latent_days = dur_latent * 7,
   dur_infectious_days = dur_infectious * 7,
   IHR = IHR,
   dur_hospitalized_days = dur_hospitalized * 7,
@@ -154,7 +154,7 @@ univariate_param_names = [:R₀, :dur_latent_days, :dur_infectious_days, :IHR, :
 if county_id == 1
   prior_samples = sample(my_model, Prior(), MCMCThreads(), n_samples, n_chains)
   gq_prior = generated_quantities(my_model, prior_samples)
-  gq_prior_chains = Chains(permutedims(reinterpret(reshape, Float64, NamedTuple{Tuple(univariate_param_names)}.(gq_prior)), [2, 1, 3]), univariate_param_names)  
+  gq_prior_chains = Chains(permutedims(reinterpret(reshape, Float64, NamedTuple{Tuple(univariate_param_names)}.(gq_prior)), [2, 1, 3]), univariate_param_names)
   CSV.write(string(results_dir, "prior_gq_samples.csv"), DataFrame(gq_prior_chains))
 end
 
@@ -162,15 +162,15 @@ end
 #   Vector{Union{Missing, Int64}}(undef, length(data_new_cases)),
 #   Vector{Union{Missing, Int64}}(undef, length(data_hospitalizations))),
 #   prior_samples)
-  
+
 
 #Sample Posterior
 posterior_samples = sample(my_model, NUTS(), MCMCThreads(), n_samples, n_chains)
 # gq_posterior = generated_quantities(my_model, posterior_samples)
 # gq_prior_chains = Chains(permutedims(reinterpret(reshape, Float64, NamedTuple{Tuple(univariate_param_names)}.(gq_posterior)), [2, 1, 3]), univariate_param_names)
 posterior_predictive = predict(bayes_seihr(
-  Vector{Union{Missing, Int64}}(undef, length(data_new_cases) + 5),
-  Vector{Union{Missing, Int64}}(undef, length(data_hospitalizations) + 5)),
+  Vector{Union{Missing, Int64}}(undef, length(data_new_cases) + 12),
+  Vector{Union{Missing, Int64}}(undef, length(data_hospitalizations) + 12)),
   posterior_samples)
 
 CSV.write(string(results_dir, "posterior_samples_", county_id, ".csv"), DataFrame(posterior_samples))

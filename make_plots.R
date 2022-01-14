@@ -5,13 +5,12 @@ library(tidybayes)
 library(fs)
 library(cowplot)
 
+time_interval_in_days <- 3
+
 raw_dat <- read_csv("data/cases_hospitalizations_by_county.csv") %>%
   rename(new_cases = cases)
 
 county_id_key <- read_csv("data/county_id_key.csv")
-
-raw_dat <- read_csv("data/cases_hospitalizations_by_county.csv") %>%
-  rename(new_cases = cases)
 
 dat_tidy <-
   raw_dat %>%
@@ -45,7 +44,7 @@ posterior_predictive_intervals <-
   group_by(county_id, time, name) %>%
   median_qi(.width = c(0.5, 0.8, 0.95)) %>%
   left_join(.,tibble(time = 1:max(.$time),
-                     date = seq(min(raw_dat$date), by = 7, length.out = max(.$time)))) %>%
+                     date = seq(min(raw_dat$date), by = time_interval_in_days, length.out = max(.$time)))) %>%
   left_join(county_id_key %>% rename(county_id = id)) %>%
   select(county, date, name, value, starts_with("."))
 
