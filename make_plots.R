@@ -63,7 +63,7 @@ make_plot <- function(county_name) {
                scales = "free_y",
                labeller = as_labeller(
                  c(hospitalizations = "Concurrent Hospitalizations",
-                   new_cases = "Weekly Cases"))) +
+                   new_cases = "Reported Cases (3 day bins)"))) +
     geom_lineribbon(data = tmp_posterior_predictive_intervals,
                     mapping = aes(date, value, ymin = .lower, ymax = .upper)) +
     geom_point(data = tmp_dat_tidy,
