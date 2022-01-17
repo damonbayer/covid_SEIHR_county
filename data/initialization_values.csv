@@ -1,57 +1,57 @@
-county,est_cases,hospitalizations
-Alameda,1019,89
-Amador,30,6
-Butte,144,34
-Calaveras,68,3
-Colusa,9,2
-Contra Costa,792,47
-Del Norte,10,0
-El Dorado,172,10
-Fresno,1011,189
-Glenn,6,0
-Humboldt,152,16
-Imperial,509,64
-Inyo,29,2
-Kern,928,124
-Kings,233,27
-Lake,40,1
-Lassen,14,1
-Los Angeles,10290,789
-Madera,169,25
-Marin,191,8
-Mariposa,18,0
-Mendocino,90,5
-Merced,243,25
-Modoc,0,3
-Mono,33,0
-Monterey,352,27
-Napa,122,6
-Nevada,112,8
-Orange,2336,202
-Placer,376,101
-Plumas,30,1
-Riverside,3577,317
-Sacramento,1588,164
-San Benito,99,7
-San Bernardino,3524,414
-San Diego,4930,337
-San Francisco,646,49
-San Joaquin,695,73
-San Luis Obispo,254,12
-San Mateo,472,32
-Santa Barbara,463,41
-Santa Clara,1373,144
-Santa Cruz,249,12
-Shasta,167,27
-Siskiyou,21,3
-Solano,267,36
-Sonoma,423,24
-Stanislaus,620,126
-Sutter,91,0
-Tehama,42,9
-Trinity,2,0
-Tulare,395,79
-Tuolumne,66,5
-Ventura,819,54
-Yolo,173,2
-Yuba,89,18
+county,est_cases,est_omicorn_cases,est_other_cases,hospitalizations
+Alameda,1018,14,1004,89
+Amador,30,1,29,6
+Butte,144,3,141,34
+Calaveras,68,1,67,3
+Colusa,9,1,8,2
+Contra Costa,793,12,781,47
+Del Norte,10,1,9,0
+El Dorado,170,3,167,10
+Fresno,1010,13,997,189
+Glenn,6,1,5,0
+Humboldt,151,3,148,16
+Imperial,508,7,501,64
+Inyo,29,1,28,2
+Kern,928,11,917,124
+Kings,232,3,229,27
+Lake,40,1,39,1
+Lassen,14,1,13,1
+Los Angeles,10340,126,10214,789
+Madera,169,3,166,25
+Marin,190,2,188,8
+Mariposa,18,1,17,0
+Mendocino,88,1,87,5
+Merced,243,3,240,25
+Modoc,0,1,-1,3
+Mono,33,1,32,0
+Monterey,352,5,347,27
+Napa,123,3,120,6
+Nevada,112,1,111,8
+Orange,2348,31,2317,202
+Placer,378,5,373,101
+Plumas,30,1,29,1
+Riverside,3570,46,3524,317
+Sacramento,1588,20,1568,164
+San Benito,99,1,98,7
+San Bernardino,3523,44,3479,414
+San Diego,4837,58,4779,337
+San Francisco,643,9,634,49
+San Joaquin,695,8,687,73
+San Luis Obispo,253,4,249,12
+San Mateo,472,7,465,32
+Santa Barbara,464,6,458,41
+Santa Clara,1371,19,1352,144
+Santa Cruz,249,4,245,12
+Shasta,167,2,165,27
+Siskiyou,21,1,20,3
+Solano,267,4,263,36
+Sonoma,425,5,420,24
+Stanislaus,619,7,612,126
+Sutter,92,1,91,0
+Tehama,43,1,42,9
+Trinity,2,1,1,0
+Tulare,397,5,392,79
+Tuolumne,66,1,65,5
+Ventura,820,12,808,54
+Yolo,172,3,169,2
+Yuba,89,2,87,18
