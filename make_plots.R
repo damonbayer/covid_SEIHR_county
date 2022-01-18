@@ -15,11 +15,12 @@ county_id_key <- read_csv("data/county_id_key.csv")
 dat_tidy <-
   raw_dat %>%
   filter(time > 0) %>%
-  select(county, date, new_cases, hospitalizations) %>%
+  select(county, date, est_other_cases, est_omicron_cases, hospitalizations) %>%
   pivot_longer(-c(date, county))
 
 posterior_predictive_intervals <-
-  dir_ls("//dfs6/pub/bayerd/covid_SEIHR_county/results") %>%
+  dir_ls("/Users/damon/Documents/covid_SEIHR_county/results") %>%
+  # dir_ls("//dfs6/pub/bayerd/covid_SEIHR_county/results") %>%
   enframe(name = NULL, value = "full_path") %>%
   mutate(file_name = full_path %>%
            path_file() %>%
@@ -63,7 +64,8 @@ make_plot <- function(county_name) {
                scales = "free_y",
                labeller = as_labeller(
                  c(hospitalizations = "Concurrent Hospitalizations",
-                   new_cases = "Reported Cases (3 day bins)"))) +
+                   est_omicron_cases = "Reported Omicron Cases (3 day bins)",
+                   est_other_cases = "Reported Other Cases (3 day bins)"))) +
     geom_lineribbon(data = tmp_posterior_predictive_intervals,
                     mapping = aes(date, value, ymin = .lower, ymax = .upper)) +
     geom_point(data = tmp_dat_tidy,

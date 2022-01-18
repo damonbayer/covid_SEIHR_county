@@ -76,17 +76,21 @@ full_dat <- full_join(cases, hosp) %>%
   select(date, county, cases, hospitalized_covid_patients)
 
 
-latest_date <- max(full_dat$date, na.rm = T) + 1
-prop_omicron_model <- glm(prop_omicron ~ bs(date), data = variants_dat, family = gaussian(link = "logit"))
-
 time_interval_in_days <- 3
-start_date <- ymd("2021-12-12")
+
+earliest_date_elligible_to_report <- ymd("2021-12-12")
+latest_date <- max(full_dat$date, na.rm = T) + 1
+# last_date_to_report <- latest_date - 10
+last_date_to_report <- latest_date - 6
+first_date_to_report <-  earliest_date_elligible_to_report + (as.numeric(last_date_to_report - earliest_date_elligible_to_report) %% time_interval_in_days) + 1
+
+prop_omicron_model <- glm(prop_omicron ~ bs(date), data = variants_dat, family = gaussian(link = "logit"))
 
 dat <-
   full_dat %>%
   drop_na() %>%
-  filter(date >= start_date,
-         date <= latest_date - 6) %>%
+  filter(date >= first_date_to_report,
+         date <= last_date_to_report) %>%
   mutate(days_ago = as.numeric(latest_date - date)) %>%
   mutate(est_prop_reported = case_reporting_delay_ecdf(days_ago)) %>%
   mutate(est_cases = round(cases / est_prop_reported)) %>%
@@ -102,17 +106,27 @@ dat <-
             date = last(date),
             cases = sum(cases),
             est_cases = sum(est_cases),
-            est_omicron_cases = round(sum(est_omicron_cases)) + 1,
-            est_other_cases = round(sum(est_other_cases)) - 1,
+            est_omicron_cases = round(sum(est_omicron_cases)),
+            est_other_cases = round(sum(est_other_cases)),
             hospitalizations = last(hospitalized_covid_patients),
             .groups = "drop") %>%
   select(-lump)
 
+dat %>%
+  filter(county == "Orange") %>%
+  select(date, cases, est_cases, est_omicron_cases, est_other_cases) %>%
+  pivot_longer(-date) %>%
+  ggplot(aes(date, value, group = name, color = name)) +
+  geom_line() +
+  geom_point() +
+  cowplot::theme_minimal_grid() +
+  scale_y_continuous(labels = scales::comma)
+
 initialization_values <-
   full_dat %>%
   drop_na() %>%
-  filter(date >= min(dat$date) - time_interval_in_days - 6,
-         date <= min(dat$date) - time_interval_in_days) %>%
+  filter(date >= first_date_to_report - 6,
+         date <= first_date_to_report) %>%
   mutate(.,
          prop_omicron_cases = predict(prop_omicron_model,
                                       newdata = .,
@@ -120,12 +134,12 @@ initialization_values <-
   mutate(days_ago = as.numeric(latest_date - date)) %>%
   mutate(est_prop_reported = case_reporting_delay_ecdf(days_ago)) %>%
   mutate(est_cases = round(cases / est_prop_reported)) %>%
-  mutate(est_omicron_cases = round(prop_omicron_cases * est_cases),
-         est_other_cases = round((1 - prop_omicron_cases) * est_cases)) %>%
+  mutate(est_omicron_cases = round(prop_omicron_cases * est_cases) + 1,
+         est_other_cases = round((1 - prop_omicron_cases) * est_cases) - 1) %>%
   group_by(county) %>%
   summarize(est_cases = sum(est_cases),
-            est_omicorn_cases = sum(est_omicron_cases) + 1,
-            est_other_cases = sum(est_other_cases) - 1,
+            est_omicorn_cases = sum(est_omicron_cases),
+            est_other_cases = sum(est_other_cases),
             hospitalizations = last(hospitalized_covid_patients))
 
 
