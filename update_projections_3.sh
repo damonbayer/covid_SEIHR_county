@@ -14,4 +14,4 @@ module purge
 module load R
 cd //data/homezvol2/bayerd/covid_SEIHR_county/
 
-Rscript make_plots.R
+R CMD BATCH make_plots.R
