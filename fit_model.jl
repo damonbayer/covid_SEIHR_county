@@ -73,17 +73,6 @@ data_est_other_cases = dat[:, :est_other_cases]
 data_est_omicron_cases = dat[:, :est_omicron_cases]
 data_hospitalizations = dat[:, :hospitalizations]
 
-# R₀_non_centered = 0
-# dur_latent_non_centered = 0
-# dur_infectious_non_centered = 0
-# IHR_non_centered = 0
-# dur_hospitalized_non_centered = 0
-# ϕ_cases_non_centered = 1
-# ϕ_hospitalizations_non_centered = 1
-# case_detection_rate_non_centered = 0
-# E_init_non_centered = 0
-# I_init_non_centered = 0
-
 @model bayes_seihr(data_est_other_cases, data_est_omicron_cases, data_hospitalizations) = begin
   l = length(data_est_other_cases)
   ode_eval_times = collect(range(time_interval_in_days / 7, step = time_interval_in_days / 7, length = l))
@@ -140,10 +129,6 @@ data_hospitalizations = dat[:, :hospitalizations]
   ϕ_hospitalizations = ϕ_hospitalizations_non_centered^(-2)
   case_detection_rate = logistic(case_detection_rate_non_centered * 0.2 - 1.4)
 
-  # Eₙ_init = E_init_non_centeredₙ * 0.5 + news_cases_other_initial * 5 / 3 # new_cases_in_week_prior_to_model_start * (5/6, 20/6)
-  # Eₒ_init  = E_init_non_centeredₒ * 0.5 + news_cases_omicron_initial * 5 / 3 # new_cases_in_week_prior_to_model_start * (5/6, 20/6)
-  # Iₙ_init  = I_init_non_centeredₙ * 0.5 + news_cases_other_initial * 10 / 3 # new_cases_in_week_prior_to_model_start * (5/3, 20/3)
-  # Iₒ_init  = I_init_non_centeredₒ * 0.5 + news_cases_omicron_initial * 10 / 3 # new_cases_in_week_prior_to_model_start * (5/3, 20/3)
   Eₙ_init = E_init_non_centeredₙ * 0.05 + news_cases_other_initial * 5 / 3 # new_cases_in_week_prior_to_model_start * (5/6, 20/6)
   Eₒ_init  = E_init_non_centeredₒ * 0.05 + news_cases_omicron_initial * 5 / 3 # new_cases_in_week_prior_to_model_start * (5/6, 20/6)
   Iₙ_init  = I_init_non_centeredₙ * 0.05 + news_cases_other_initial * 10 / 3 # new_cases_in_week_prior_to_model_start * (5/3, 20/3)
@@ -210,7 +195,6 @@ end
 #   Vector{Union{Missing, Int64}}(undef, length(data_new_cases)),
 #   Vector{Union{Missing, Int64}}(undef, length(data_hospitalizations))),
 #   prior_samples)
-
 
 #Sample Posterior
 posterior_samples = sample(my_model, NUTS(), MCMCThreads(), n_samples, n_chains)
