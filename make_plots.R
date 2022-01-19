@@ -96,9 +96,15 @@ ggsave2(filename = "plots.pdf",
 
 prior_gq_samples <- read_csv(path(results_dir, "prior_gq_samples.csv"))
 
+prior_gq_samples %>%
+  colnames()
+
 prior_plot <-
   prior_gq_samples %>%
   pivot_longer(-c(iteration, chain)) %>%
+  mutate(name = name %>%
+           str_replace("ₙ|₀ₙ", "_non_omi") %>%
+           str_replace("ₒ|₀ₒ", "_omicron")) %>%
   ggplot(aes(value)) +
   facet_wrap(. ~ name, scales = "free") +
   stat_halfeye(normalize = "panels") +
@@ -107,4 +113,4 @@ prior_plot <-
        x = NULL,
        y = NULL)
 
-ggsave2(filename = "prior_plot.pdf", plot = prior_plot)
+ggsave2(filename = "prior_plot.pdf", plot = prior_plot, width = 11, height = 8.5)
