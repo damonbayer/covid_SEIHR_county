@@ -206,5 +206,5 @@ posterior_predictive = predict(bayes_seihr(Vector{Union{Missing, Int64}}(undef, 
   Vector{Union{Missing, Int64}}(undef, length(data_hospitalizations) + 12)),
   posterior_samples)
 
-CSV.write(string(results_dir, "posterior_samples_", county_id, ".csv"), DataFrame(posterior_samples))
+CSV.write(string(results_dir, "posterior_gq_samples_", county_id, ".csv"), DataFrame(gq_posterior_chains))
 CSV.write(string(results_dir, "posterior_predictive_samples_", county_id, ".csv"), DataFrame(posterior_predictive))

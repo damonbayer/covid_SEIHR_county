@@ -4,6 +4,7 @@ library(scales)
 library(tidybayes)
 library(fs)
 library(cowplot)
+library(lubridate)
 
 if (Sys.info()[["sysname"]] == "Linux") {
   results_dir <- "//dfs6/pub/bayerd/covid_SEIHR_county/results"
@@ -13,6 +14,8 @@ if (Sys.info()[["sysname"]] == "Linux") {
 
 time_interval_in_days <- 3
 
+
+# Process Data ------------------------------------------------------------
 raw_dat <- read_csv("data/cases_hospitalizations_by_county.csv") %>%
   rename(new_cases = cases)
 
@@ -54,7 +57,43 @@ posterior_predictive_intervals <-
   left_join(county_id_key %>% rename(county_id = id)) %>%
   select(county, date, name, value, starts_with("."))
 
-make_plot <- function(county_name) {
+prior_gq_samples <-
+  read_csv(path(results_dir, "prior_gq_samples.csv")) %>%
+  pivot_longer(-c(iteration, chain)) %>%
+  mutate(name = name %>%
+           str_replace("ₙ|₀ₙ", "_non_omi") %>%
+           str_replace("ₒ|₀ₒ", "_omicron")) %>%
+  select(name, value) %>%
+  mutate(county = "Prior",
+         source = "Prior")
+
+posterior_gq_samples <-
+  dir_ls(results_dir) %>%
+  enframe(name = NULL, value = "full_path") %>%
+  mutate(file_name = full_path %>%
+           path_file() %>%
+           path_ext_remove()) %>%
+  filter(str_ends(file_name, "\\d+")) %>%
+  mutate(county_id = file_name %>%
+           str_extract("\\d+$") %>%
+           as.numeric()) %>%
+  filter(str_detect(file_name, "posterior_gq_samples")) %>%
+  mutate(results = full_path %>%
+           map(read_csv)) %>%
+  select(county_id, results) %>%
+  unnest(results) %>%
+  pivot_longer(-c(county_id, iteration, chain)) %>%
+  mutate(name = name %>%
+           str_replace("ₙ|₀ₙ", "_non_omi") %>%
+           str_replace("ₒ|₀ₒ", "_omicron")) %>%
+  left_join(county_id_key %>% rename(county_id = id)) %>%
+  select(county, name, value)
+
+
+
+# Plot Functions ----------------------------------------------------------
+
+make_post_pred_plot <- function(county_name) {
   tmp_posterior_predictive_intervals <-
     posterior_predictive_intervals %>%
     filter(county == county_name) %>%
@@ -79,38 +118,42 @@ make_plot <- function(county_name) {
     scale_y_continuous(name = "Count", labels = comma) +
     scale_x_date(name = "Date") +
     ggtitle(label = str_c(county_name, " County"),
-            subtitle = str_c("Forecasted ", max(tmp_dat_tidy$date) + 7)) +
+            subtitle = str_c("Forecasted ", max(tmp_dat_tidy$date) + 6)) +
     cowplot::theme_minimal_grid() +
     theme(legend.position = "bottom")
 }
 
+make_prior_post_plot <- function(county_name) {
+  posterior_gq_samples %>%
+    filter(county == county_name) %>%
+    mutate(source = "Posterior") %>%
+    bind_rows(prior_gq_samples) %>%
+    ggplot(aes(value, group = source, fill = source, color = source)) +
+    facet_wrap(. ~ name, scales = "free") +
+    stat_halfeye(normalize = "panels", alpha = 0.5) +
+    theme_cowplot() +
+    labs(x = NULL,
+         y = NULL,
+         color = "Source",
+         fill = "Source",
+         title = str_c(county_name, " County"),
+         subtitle = str_c("Fit ", today())) +
+    theme(legend.position = "bottom")
+}
 
+
+# Create and Save Plots ---------------------------------------------------
 plot_tibble <-
   tibble(county_name = unique(posterior_predictive_intervals$county)) %>%
-  mutate(plot_obj = map(county_name, make_plot))
+  mutate(post_pred_plot_obj = map(county_name, make_post_pred_plot),
+         prior_post_plot_obj = map(county_name, make_prior_post_plot))
 
-ggsave2(filename = "plots.pdf",
-        plot = marrangeGrob(plot_tibble$plot_obj, nrow=1, ncol=1),
+ggsave2(filename = "post_pred_plots.pdf",
+        plot = marrangeGrob(plot_tibble$post_pred_plot_obj, nrow=1, ncol=1),
         width = 11,
         height = 8.5)
 
-prior_gq_samples <- read_csv(path(results_dir, "prior_gq_samples.csv"))
-
-prior_gq_samples %>%
-  colnames()
-
-prior_plot <-
-  prior_gq_samples %>%
-  pivot_longer(-c(iteration, chain)) %>%
-  mutate(name = name %>%
-           str_replace("ₙ|₀ₙ", "_non_omi") %>%
-           str_replace("ₒ|₀ₒ", "_omicron")) %>%
-  ggplot(aes(value)) +
-  facet_wrap(. ~ name, scales = "free") +
-  stat_halfeye(normalize = "panels") +
-  cowplot::theme_cowplot() +
-  labs(title = "Model Priors",
-       x = NULL,
-       y = NULL)
-
-ggsave2(filename = "prior_plot.pdf", plot = prior_plot, width = 11, height = 8.5)
+ggsave2(filename = "prior_post_plots.pdf",
+        plot = marrangeGrob(plot_tibble$prior_post_plot_obj, nrow=1, ncol=1),
+        width = 11,
+        height = 8.5)
