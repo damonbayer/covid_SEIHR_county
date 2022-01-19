@@ -13,6 +13,7 @@ We use `est_omicron_cases = reported_cases / proportion_cases_expected * proport
 # Model
 
 The model is a S-E-I-R type model startified by omicron vs non-omicrons  with hospitalization compartments.
+The model is fit with [fit_model.jl](fit_model.jl) using [Turing.jl](https://turing.ml/stable/).
 
 ![model_diagram](model_diagram.png)
 
