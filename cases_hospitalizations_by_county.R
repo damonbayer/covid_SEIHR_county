@@ -2,12 +2,23 @@ library(tidyverse)
 library(ckanr)
 library(lubridate)
 library(splines)
+library(fs)
+
+if (Sys.info()[["sysname"]] == "Linux") {
+  results_dir <- "//dfs6/pub/bayerd/covid_SEIHR_county/results"
+} else if (Sys.info()[["sysname"]] == "Darwin") {
+  results_dir <- "results"
+}
 
 case_reporting_delay_ecdf <- read_rds("case_reporting_delay_ecdf.rds")
 
 variants_dat <- read_tsv("https://raw.githubusercontent.com/blab/rt-from-frequency-dynamics/master/data/omicron-us/omicron-us_location-variant-sequence-counts.tsv") %>%
   filter(location == "California") %>%
   select(-location) %>%
+  distinct() %>%
+  pivot_wider(names_from = variant, values_from = sequences, values_fill = 0) %>%
+  pivot_longer(-date, names_to = "variant", values_to = "sequences") %>%
+  mutate(sequences = sequences + 1) %>%
   group_by(date) %>%
   summarize(variant = variant,
             prop = sequences / sum(sequences)) %>%
@@ -153,3 +164,5 @@ county_id_key <-
 write_csv(dat, "data/cases_hospitalizations_by_county.csv")
 write_csv(initialization_values, "data/initialization_values.csv")
 write_csv(county_id_key, "data/county_id_key.csv")
+# Clear results for next fit
+dir_delete(results_dir)
