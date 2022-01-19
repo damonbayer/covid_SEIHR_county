@@ -140,10 +140,14 @@ data_hospitalizations = dat[:, :hospitalizations]
   ϕ_hospitalizations = ϕ_hospitalizations_non_centered^(-2)
   case_detection_rate = logistic(case_detection_rate_non_centered * 0.2 - 1.4)
 
-  Eₙ_init = E_init_non_centeredₙ * 0.5 + news_cases_other_initial * 5 / 3 # new_cases_in_week_prior_to_model_start * (5/6, 20/6)
-  Eₒ_init  = E_init_non_centeredₒ * 0.5 + news_cases_omicron_initial * 5 / 3 # new_cases_in_week_prior_to_model_start * (5/6, 20/6)
-  Iₙ_init  = I_init_non_centeredₙ * 0.5 + news_cases_other_initial * 10 / 3 # new_cases_in_week_prior_to_model_start * (5/3, 20/3)
-  Iₒ_init  = I_init_non_centeredₒ * 0.5 + news_cases_omicron_initial * 10 / 3 # new_cases_in_week_prior_to_model_start * (5/3, 20/3)
+  # Eₙ_init = E_init_non_centeredₙ * 0.5 + news_cases_other_initial * 5 / 3 # new_cases_in_week_prior_to_model_start * (5/6, 20/6)
+  # Eₒ_init  = E_init_non_centeredₒ * 0.5 + news_cases_omicron_initial * 5 / 3 # new_cases_in_week_prior_to_model_start * (5/6, 20/6)
+  # Iₙ_init  = I_init_non_centeredₙ * 0.5 + news_cases_other_initial * 10 / 3 # new_cases_in_week_prior_to_model_start * (5/3, 20/3)
+  # Iₒ_init  = I_init_non_centeredₒ * 0.5 + news_cases_omicron_initial * 10 / 3 # new_cases_in_week_prior_to_model_start * (5/3, 20/3)
+  Eₙ_init = E_init_non_centeredₙ * 0.05 + news_cases_other_initial * 5 / 3 # new_cases_in_week_prior_to_model_start * (5/6, 20/6)
+  Eₒ_init  = E_init_non_centeredₒ * 0.05 + news_cases_omicron_initial * 5 / 3 # new_cases_in_week_prior_to_model_start * (5/6, 20/6)
+  Iₙ_init  = I_init_non_centeredₙ * 0.05 + news_cases_other_initial * 10 / 3 # new_cases_in_week_prior_to_model_start * (5/3, 20/3)
+  Iₒ_init  = I_init_non_centeredₒ * 0.05 + news_cases_omicron_initial * 10 / 3 # new_cases_in_week_prior_to_model_start * (5/3, 20/3)
   Hₙ_init  = hospitalizations_initial - 1
   Hₒ_init  = 1
   R_init  = 1
@@ -193,7 +197,7 @@ n_samples = 2000
 n_chains = 4
 my_model = bayes_seihr(data_est_other_cases, data_est_omicron_cases, data_hospitalizations)
 
-univariate_param_names = [R₀ₙ, :R₀ₒ, :dur_latentₙ_days, :dur_latentₒ_days, :dur_infectiousₙ_days, :dur_infectiousₒ_days, :IHRₙ, :IHRₒ, :dur_hospitalizedₙ_days, :dur_hospitalizedₒ_days, :case_detection_rate]
+univariate_param_names = [:R₀ₙ, :R₀ₒ, :dur_latentₙ_days, :dur_latentₒ_days, :dur_infectiousₙ_days, :dur_infectiousₒ_days, :IHRₙ, :IHRₒ, :dur_hospitalizedₙ_days, :dur_hospitalizedₒ_days, :case_detection_rate]
 
 if county_id == 1
   prior_samples = sample(my_model, Prior(), MCMCThreads(), n_samples, n_chains)
@@ -211,7 +215,7 @@ end
 #Sample Posterior
 posterior_samples = sample(my_model, NUTS(), MCMCThreads(), n_samples, n_chains)
 gq_posterior = generated_quantities(my_model, posterior_samples)
-gq_prior_chains = Chains(permutedims(reinterpret(reshape, Float64, (gq_posterior)), [2,1,3]), collect(keys(gq_posterior[1,1,1])))
+gq_posterior_chains = Chains(permutedims(reinterpret(reshape, Float64, (gq_posterior)), [2,1,3]), collect(keys(gq_posterior[1,1,1])))
 
 posterior_predictive = predict(bayes_seihr(Vector{Union{Missing, Int64}}(undef, length(data_est_other_cases) + 12),
   Vector{Union{Missing, Int64}}(undef, length(data_est_omicron_cases) + 12),

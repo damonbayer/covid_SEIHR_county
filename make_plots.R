@@ -5,6 +5,12 @@ library(tidybayes)
 library(fs)
 library(cowplot)
 
+if (Sys.info()[["sysname"]] == "Linux") {
+  results_dir <- "//dfs6/pub/bayerd/covid_SEIHR_county/results"
+} else if (Sys.info()[["sysname"]] == "Darwin") {
+  results_dir <- "results"
+}
+
 time_interval_in_days <- 3
 
 raw_dat <- read_csv("data/cases_hospitalizations_by_county.csv") %>%
@@ -19,8 +25,7 @@ dat_tidy <-
   pivot_longer(-c(date, county))
 
 posterior_predictive_intervals <-
-  dir_ls("/Users/damon/Documents/covid_SEIHR_county/results") %>%
-  # dir_ls("//dfs6/pub/bayerd/covid_SEIHR_county/results") %>%
+  dir_ls(results_dir) %>%
   enframe(name = NULL, value = "full_path") %>%
   mutate(file_name = full_path %>%
            path_file() %>%
@@ -89,7 +94,7 @@ ggsave2(filename = "plots.pdf",
         width = 11,
         height = 8.5)
 
-prior_gq_samples <- read_csv("results/prior_gq_samples.csv")
+prior_gq_samples <- read_csv(path(results_dir, "prior_gq_samples.csv"))
 
 prior_plot <-
   prior_gq_samples %>%
