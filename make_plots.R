@@ -19,7 +19,9 @@ time_interval_in_days <- 3
 raw_dat <- read_csv("data/cases_hospitalizations_by_county.csv") %>%
   rename(new_cases = cases)
 
-county_id_key <- read_csv("data/county_id_key.csv")
+county_id_key <- read_csv("data/county_id_key.csv") %>%
+  add_row(id = 0, county = "California") %>%
+  arrange(id)
 
 dat_tidy <-
   raw_dat %>%
@@ -48,7 +50,12 @@ posterior_predictive_samples <-
            as.numeric(),
          name = name %>%
            str_extract("^.+(?=\\[)") %>%
-           str_remove("data_"))
+           str_remove("data_")) %>%
+  bind_rows(., group_by(., chain, iteration, time, name) %>%
+              summarize(value = sum(value),
+                        .groups = "drop") %>%
+              mutate(county_id = 0)) %>%
+  arrange(county_id)
 
 posterior_predictive_intervals <-
   posterior_predictive_samples %>%
@@ -145,8 +152,10 @@ make_post_pred_plot <- function(county_name) {
     scale_fill_brewer(name = "Credible Interval Width") +
     scale_y_continuous(name = "Count", labels = comma) +
     scale_x_date(name = "Date") +
-    ggtitle(label = str_c(county_name, " County"),
-            subtitle = str_c("Forecasted ", max(tmp_dat_tidy$date) + 6)) +
+    ggtitle(label = if_else(county_name == "California",
+                            county_name,
+                            str_c(county_name, " County")),
+            subtitle = str_c("Forecasted ", max(dat_tidy$date) + 6)) +
     cowplot::theme_minimal_grid() +
     theme(legend.position = "bottom")
 }
@@ -164,7 +173,9 @@ make_prior_post_plot <- function(county_name) {
          y = NULL,
          color = "Source",
          fill = "Source",
-         title = str_c(county_name, " County"),
+         title = if_else(county_name == "California",
+                         county_name,
+                         str_c(county_name, " County")),
          subtitle = str_c("Fit ", today())) +
     theme(legend.position = "bottom")
 }
