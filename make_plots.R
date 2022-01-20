@@ -27,7 +27,7 @@ dat_tidy <-
   select(county, date, est_other_cases, est_omicron_cases, hospitalizations) %>%
   pivot_longer(-c(date, county))
 
-posterior_predictive_intervals <-
+posterior_predictive_samples <-
   dir_ls(results_dir) %>%
   enframe(name = NULL, value = "full_path") %>%
   mutate(file_name = full_path %>%
@@ -48,7 +48,10 @@ posterior_predictive_intervals <-
            as.numeric(),
          name = name %>%
            str_extract("^.+(?=\\[)") %>%
-           str_remove("data_")) %>%
+           str_remove("data_"))
+
+posterior_predictive_intervals <-
+  posterior_predictive_samples %>%
   select(county_id, time, name, value) %>%
   group_by(county_id, time, name) %>%
   median_qi(.width = c(0.5, 0.8, 0.95)) %>%
@@ -56,6 +59,31 @@ posterior_predictive_intervals <-
                      date = seq(min(raw_dat$date), by = time_interval_in_days, length.out = max(.$time)))) %>%
   left_join(county_id_key %>% rename(county_id = id)) %>%
   select(county, date, name, value, starts_with("."))
+
+posterior_predictive_LEMMA_format <-
+  posterior_predictive_samples %>%
+  pivot_wider(names_from = name, values_from = value) %>%
+  mutate(cases = est_other_cases + est_omicron_cases) %>%
+  select(-starts_with("est")) %>%
+  select(county_id, time, hospitalizations, cases) %>%
+  pivot_longer(c(hospitalizations, cases)) %>%
+  group_by(county_id, time, name) %>%
+  median_qi(.width = 0.9) %>%
+  pivot_longer(cols = c(value, .lower, .upper), names_to = "value_type") %>%
+  mutate(quantile = 0.5 +
+           case_when(
+             value_type == ".lower" ~ -1,
+             value_type == "value" ~ -0,
+             value_type == ".upper" ~ 1) *
+           .width / 2 ) %>%
+  select(county_id, time, quantile, name, value) %>%
+  pivot_wider(names_from = name, values_from = value) %>%
+  left_join(.,tibble(time = 1:max(.$time),
+                     date = seq(min(raw_dat$date), by = time_interval_in_days, length.out = max(.$time)))) %>%
+  left_join(county_id_key %>% rename(county_id = id)) %>%
+  select(date, county, quantile, hosp_census_with_covid = hospitalizations, cases) %>%
+  arrange(county, quantile, date)
+
 
 prior_gq_samples <-
   read_csv(path(results_dir, "prior_gq_samples.csv")) %>%
@@ -157,3 +185,5 @@ ggsave2(filename = "prior_post_plots.pdf",
         plot = marrangeGrob(plot_tibble$prior_post_plot_obj, nrow=1, ncol=1),
         width = 12,
         height = 8)
+
+write_csv(posterior_predictive_LEMMA_format, "posterior_predictive_LEMMA_format.csv")
