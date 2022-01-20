@@ -150,10 +150,10 @@ plot_tibble <-
 
 ggsave2(filename = "post_pred_plots.pdf",
         plot = marrangeGrob(plot_tibble$post_pred_plot_obj, nrow=1, ncol=1),
-        width = 11,
-        height = 8.5)
+        width = 18,
+        height = 6)
 
 ggsave2(filename = "prior_post_plots.pdf",
         plot = marrangeGrob(plot_tibble$prior_post_plot_obj, nrow=1, ncol=1),
-        width = 11,
-        height = 8.5)
+        width = 12,
+        height = 8)
