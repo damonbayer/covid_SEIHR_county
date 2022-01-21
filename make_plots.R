@@ -27,7 +27,11 @@ dat_tidy <-
   raw_dat %>%
   filter(time > 0) %>%
   select(county, date, est_other_cases, est_omicron_cases, hospitalizations) %>%
-  pivot_longer(-c(date, county))
+  pivot_longer(-c(date, county)) %>%
+  bind_rows(., group_by(., date, name) %>%
+              summarize(value = sum(value),
+                        .groups = "drop") %>%
+              mutate(county = "California"))
 
 posterior_predictive_samples <-
   dir_ls(results_dir) %>%
