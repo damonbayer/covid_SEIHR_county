@@ -142,14 +142,16 @@ initialization_values <-
   mutate(days_ago = as.numeric(latest_date - date)) %>%
   mutate(est_prop_reported = case_reporting_delay_ecdf(days_ago)) %>%
   mutate(est_cases = round(cases / est_prop_reported)) %>%
-  mutate(est_omicron_cases = round(prop_omicron_cases * est_cases) + 1,
-         est_other_cases = round((1 - prop_omicron_cases) * est_cases) - 1) %>%
+  mutate(est_omicron_cases = round(prop_omicron_cases * est_cases),
+         est_other_cases = round((1 - prop_omicron_cases) * est_cases)) %>%
   group_by(county) %>%
   summarize(est_cases = sum(est_cases),
             est_omicorn_cases = sum(est_omicron_cases),
             est_other_cases = sum(est_other_cases),
-            hospitalizations = last(hospitalized_covid_patients))
-
+            hospitalizations = last(hospitalized_covid_patients)) %>%
+  pivot_longer(-county) %>%
+  mutate(value = if_else(value == 0, 1, value)) %>%
+  pivot_wider(county)
 
 county_id_key <-
   dat %>%

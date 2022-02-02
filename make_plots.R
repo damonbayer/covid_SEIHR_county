@@ -98,6 +98,7 @@ posterior_predictive_LEMMA_format <-
 
 prior_gq_samples <-
   read_csv(path(results_dir, "prior_gq_samples.csv")) %>%
+  select(-matches("\\[\\d+\\]", )) %>%
   pivot_longer(-c(iteration, chain)) %>%
   mutate(name = name %>%
            str_replace("ₙ|₀ₙ", "_non_omi") %>%
@@ -106,7 +107,7 @@ prior_gq_samples <-
   mutate(county = "Prior",
          source = "Prior")
 
-posterior_gq_samples <-
+posterior_gq_samples_all <-
   dir_ls(results_dir) %>%
   enframe(name = NULL, value = "full_path") %>%
   mutate(file_name = full_path %>%
@@ -128,7 +129,25 @@ posterior_gq_samples <-
   left_join(county_id_key %>% rename(county_id = id)) %>%
   select(county, name, value)
 
+posterior_gq_samples <-
+  posterior_gq_samples_all %>%
+  filter(str_detect(name, "\\[\\d+\\]", negate = T))
 
+posterior_gq_samples_latent_curves <-
+  posterior_gq_samples_all %>%
+  filter(str_detect(name, "\\[\\d+\\]")) %>%
+  mutate(time = name %>%
+           str_extract("(?<=\\[)\\d+(?=\\])") %>%
+           as.numeric(),
+         name = name %>%
+           str_extract("^.+(?=\\[)") %>%
+           str_remove("data_")) %>%
+  group_by(county, name, time) %>%
+  median_qi(.width = c(0.5, 0.8, 0.95)) %>%
+  left_join(.,tibble(time = 0:max(.$time),
+                     date = seq(min(raw_dat$date) - time_interval_in_days, by = time_interval_in_days, length.out = max(.$time) + 1)))
+
+rm(posterior_gq_samples_all)
 
 # Plot Functions ----------------------------------------------------------
 
@@ -185,11 +204,33 @@ make_prior_post_plot <- function(county_name) {
 }
 
 
+make_latent_curves_plot <- function(county_name) {
+  if (county_name == "California") {
+    return(ggplot())
+  }
+  posterior_gq_samples_latent_curves %>%
+    filter(county == county_name) %>%
+    ggplot(aes(date, value, ymin = .lower, ymax = .upper)) +
+    facet_wrap(. ~ name,
+               scales = "free_y") +
+    geom_lineribbon() +
+    scale_fill_brewer(name = "Credible Interval Width") +
+    scale_y_continuous(name = "Count", labels = comma) +
+    scale_x_date(name = "Date") +
+    ggtitle(label = if_else(county_name == "California",
+                            county_name,
+                            str_c(county_name, " County")),
+            subtitle = str_c("Forecasted ", max(dat_tidy$date) + 6)) +
+    cowplot::theme_minimal_grid() +
+    theme(legend.position = "bottom")
+}
+
 # Create and Save Plots ---------------------------------------------------
 plot_tibble <-
   tibble(county_name = unique(posterior_predictive_intervals$county)) %>%
   mutate(post_pred_plot_obj = map(county_name, make_post_pred_plot),
-         prior_post_plot_obj = map(county_name, make_prior_post_plot))
+         prior_post_plot_obj = map(county_name, make_prior_post_plot),
+         latent_curves_plot_obj = map(county_name, make_latent_curves_plot))
 
 ggsave2(filename = "post_pred_plots.pdf",
         plot = marrangeGrob(plot_tibble$post_pred_plot_obj, nrow=1, ncol=1),
@@ -198,6 +239,11 @@ ggsave2(filename = "post_pred_plots.pdf",
 
 ggsave2(filename = "prior_post_plots.pdf",
         plot = marrangeGrob(plot_tibble$prior_post_plot_obj, nrow=1, ncol=1),
+        width = 12,
+        height = 8)
+
+ggsave2(filename = "latent_curves_plots.pdf",
+        plot = marrangeGrob(plot_tibble$latent_curves_plot_obj, nrow=1, ncol=1),
         width = 12,
         height = 8)
 

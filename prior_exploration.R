@@ -24,8 +24,10 @@ exp(qnorm(p = target_qunatiles, mean = -0.85, sd = 0.25)) * 7
 # https://twitter.com/famulare_mike/status/1482097499045195779/photo/1
 # IHRₙ
 scales::percent(expit(qnorm(p = target_qunatiles, mean = -4.2, sd = 0.2)))
+scales::percent(expit(qnorm(p = target_qunatiles, mean = -3.3, sd = 0.25)))
 # IHRₒ
 scales::percent(expit(qnorm(p = target_qunatiles, mean = -5.3, sd = 0.25)))
+scales::percent(expit(qnorm(p = target_qunatiles, mean = -4.3, sd = 0.25)))
 
 
 # https://www.medrxiv.org/content/10.1101/2022.01.11.22269045v1
