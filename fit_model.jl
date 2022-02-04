@@ -48,20 +48,26 @@ hospitalizations_initial = initialization_values[1, :hospitalizations]
 
 data_est_other_cases = dat[:, :est_other_cases]
 data_est_omicron_cases = dat[:, :est_omicron_cases]
-data_est_other_tests = dat[:, :est_other_tests]
-data_est_omicron_tests = dat[:, :est_omicron_tests]
+data_tests = dat[:, :tests]
+# data_est_other_tests = dat[:, :est_other_tests]
+# data_est_omicron_tests = dat[:, :est_omicron_tests]
 data_hospitalizations = dat[:, :hospitalizations]
 
-other_case_detection_rate_samples = logistic.(randn(2000) * 0.2 .- 1.1)
-omicron_case_detection_rate_samples = logistic.(randn(2000) * 0.2 .- 1.6)
-other_rho_samples = other_case_detection_rate_samples / data_est_other_tests
-omicron_rho_samples = omicron_case_detection_rate_samples / data_est_omicron_tests
+case_detection_rate_samples = logistic.(randn(2000) * 0.2 .- 1.1)
+rho_samples = case_detection_rate_samples / data_tests
+rho_mean = mean(log.(rho_samples))
+rho_sd = std(log.(rho_samples))
 
-other_rho_mean = mean(log.(other_rho_samples))
-other_rho_sd = std(log.(other_rho_samples))
+# other_case_detection_rate_samples = logistic.(randn(2000) * 0.2 .- 1.1)
+# omicron_case_detection_rate_samples = logistic.(randn(2000) * 0.2 .- 1.6)
+# other_rho_samples = other_case_detection_rate_samples / data_est_other_tests
+# omicron_rho_samples = omicron_case_detection_rate_samples / data_est_omicron_tests
 
-omicron_rho_mean = mean(log.(omicron_rho_samples))
-omicron_rho_sd = std(log.(omicron_rho_samples))
+# other_rho_mean = mean(log.(other_rho_samples))
+# other_rho_sd = std(log.(other_rho_samples))
+
+# omicron_rho_mean = mean(log.(omicron_rho_samples))
+# omicron_rho_sd = std(log.(omicron_rho_samples))
 
 function seir_ode_log!(du, u, p, t)
     (S, Eₙ, Eₒ, Iₙ, Iₒ, Hₙ, Hₒ, R, Cₙ, Cₒ) = exp.(u)
@@ -101,7 +107,8 @@ function seir_ode_log!(du, u, p, t)
 
 l = length(data_est_other_cases)
 
-@model bayes_seihr(data_est_other_cases, data_est_omicron_cases, data_hospitalizations, data_est_other_tests, data_est_omicron_tests) = begin
+# @model bayes_seihr(data_est_other_cases, data_est_omicron_cases, data_hospitalizations, data_est_other_tests, data_est_omicron_tests) = begin
+@model bayes_seihr(data_est_other_cases, data_est_omicron_cases, data_hospitalizations, data_tests) = begin
   l = length(data_est_other_cases)
   ode_eval_times = collect(range(time_interval_in_days / 7, step = time_interval_in_days / 7, length = l))
   
@@ -113,7 +120,7 @@ l = length(data_est_other_cases)
   dur_hospitalized_non_centeredₙ ~ Normal()
   E_init_non_centeredₙ ~ Normal()
   I_init_non_centeredₙ ~ Normal()
-  ρ_non_centeredₙ ~ Normal()
+  # ρ_non_centeredₙ ~ Normal()
 
   R₀_non_centeredₒ ~ Normal()
   dur_latent_non_centeredₒ ~ Normal()
@@ -122,7 +129,9 @@ l = length(data_est_other_cases)
   dur_hospitalized_non_centeredₒ ~ Normal()
   E_init_non_centeredₒ ~ Normal()
   I_init_non_centeredₒ ~ Normal()
-  ρ_non_centeredₒ ~ Normal()
+  # ρ_non_centeredₒ ~ Normal()
+
+  ρ_non_centered ~ Normal()
 
   ϕ_cases_non_centered ~ Exponential()
   ϕ_hospitalizations_non_centered ~ Exponential()
@@ -157,8 +166,9 @@ l = length(data_est_other_cases)
   ηₙ = 1 / dur_hospitalizedₙ
   ηₒ = 1 / dur_hospitalizedₒ
 
-  ρₙ = exp(ρ_non_centeredₙ * other_rho_sd + other_rho_mean)
-  ρₒ = exp(ρ_non_centeredₒ *  omicron_rho_sd + omicron_rho_mean)
+  # ρₙ = exp(ρ_non_centeredₙ * other_rho_sd + other_rho_mean)
+  # ρₒ = exp(ρ_non_centeredₒ *  omicron_rho_sd + omicron_rho_mean)
+  ρ = exp(ρ_non_centered * rho_sd + rho_mean)
 
   ϕ_cases = ϕ_cases_non_centered^(-2)
   ϕ_hospitalizations = ϕ_hospitalizations_non_centered^(-2)
@@ -196,11 +206,10 @@ l = length(data_est_other_cases)
   latent_hospitalizations = ode_sol_array[6,2:end] + ode_sol_array[7,2:end]
 
   for i in 1:l
-    # data_est_other_cases[i] ~ NegativeBinomial2(max(latent_cases_other[i] * data_est_other_tests[i] * ρₙ, 0), max(ϕ_cases, eps(0.0)))
-    # data_est_omicron_cases[i] ~ NegativeBinomial2(max(latent_cases_omicron[i] * data_est_omicron_tests[i] * ρₒ, 0), max(ϕ_cases, eps(0.0)))
-    # data_hospitalizations[i] ~ NegativeBinomial2(max(latent_hospitalizations[i], 0), max(ϕ_hospitalizations, eps(0.0)))
-    data_est_other_cases[i] ~ NegativeBinomial2(latent_cases_other[i] * data_est_other_tests[i] * ρₙ, ϕ_cases)
-    data_est_omicron_cases[i] ~ NegativeBinomial2(latent_cases_omicron[i] * data_est_omicron_tests[i] * ρₒ, ϕ_cases)
+    # data_est_other_cases[i] ~ NegativeBinomial2(latent_cases_other[i] * data_est_other_tests[i] * ρₙ, ϕ_cases)
+    # data_est_omicron_cases[i] ~ NegativeBinomial2(latent_cases_omicron[i] * data_est_omicron_tests[i] * ρₒ, ϕ_cases)
+    data_est_other_cases[i] ~ NegativeBinomial2(latent_cases_other[i] * data_tests[i] * ρ, ϕ_cases)
+    data_est_omicron_cases[i] ~ NegativeBinomial2(latent_cases_omicron[i] * data_tests[i] * ρ, ϕ_cases)
     data_hospitalizations[i] ~ NegativeBinomial2(latent_hospitalizations[i], ϕ_hospitalizations)
   end
   return(R₀ₙ = R₀ₙ,
@@ -215,8 +224,9 @@ l = length(data_est_other_cases)
   dur_hospitalizedₒ_days = dur_hospitalizedₒ * 7,
   ϕ_cases_non_centered = ϕ_cases_non_centered,
   ϕ_hospitalizations_non_centered = ϕ_hospitalizations_non_centered,
-  ρₒ = ρₒ,
-  ρₙ = ρₙ,
+  # ρₒ = ρₒ,
+  # ρₙ = ρₙ,
+  ρ = ρ,
   S = ode_sol_array[1,:],
   Eₙ = ode_sol_array[2,:],
   Eₒ = ode_sol_array[3,:],
@@ -229,22 +239,25 @@ end;
 
 n_samples = 2000
 n_chains = 4
-my_model = bayes_seihr(data_est_other_cases, data_est_omicron_cases, data_hospitalizations, data_est_other_tests, data_est_omicron_tests)
+# my_model = bayes_seihr(data_est_other_cases, data_est_omicron_cases, data_hospitalizations, data_est_other_tests, data_est_omicron_tests)
+my_model = bayes_seihr(data_est_other_cases, data_est_omicron_cases, data_hospitalizations, data_tests)
 
-univariate_param_names = [:R₀ₙ, :R₀ₒ, :dur_latentₙ_days, :dur_latentₒ_days, :dur_infectiousₙ_days, :dur_infectiousₒ_days, :IHRₙ, :IHRₒ, :dur_hospitalizedₙ_days, :dur_hospitalizedₒ_days, :ϕ_cases_non_centered,  :ϕ_hospitalizations_non_centered, :ρₒ, :ρₙ]
+# univariate_param_names = [:R₀ₙ, :R₀ₒ, :dur_latentₙ_days, :dur_latentₒ_days, :dur_infectiousₙ_days, :dur_infectiousₒ_days, :IHRₙ, :IHRₒ, :dur_hospitalizedₙ_days, :dur_hospitalizedₒ_days, :ϕ_cases_non_centered,  :ϕ_hospitalizations_non_centered, :ρₒ, :ρₙ]
+univariate_param_names = [:R₀ₙ, :R₀ₒ, :dur_latentₙ_days, :dur_latentₒ_days, :dur_infectiousₙ_days, :dur_infectiousₒ_days, :IHRₙ, :IHRₒ, :dur_hospitalizedₙ_days, :dur_hospitalizedₒ_days, :ϕ_cases_non_centered,  :ϕ_hospitalizations_non_centered, :ρ]
 time_varying_param_names = ["S", "Eₙ", "Eₒ", "Iₙ", "Iₒ", "Hₙ", "Hₒ", "R"]
 
-function get_time_varying_param_chain(param_name)
-  Chains(permutedims(reshape(hcat(getindex.(gq_prior, Symbol(param_name))...), l + 1, n_samples, n_chains), [2, 1, 3]),
+function get_time_varying_param_chain(gq_chain, param_name)
+  Chains(permutedims(reshape(hcat(getindex.(gq_chain, Symbol(param_name))...), l + 1, n_samples, n_chains), [2, 1, 3]),
   Symbol.(string.(string(param_name,"["), string.(0:l), "]")))
 end
+
 
 if county_id == 1
   prior_samples = sample(my_model, Prior(), MCMCThreads(), n_samples, n_chains)
   gq_prior = generated_quantities(my_model, prior_samples)
 
   prior_subchains = vcat(Chains(permutedims(reinterpret(reshape, Float64, NamedTuple{Tuple(univariate_param_names)}.(gq_prior)), [2, 1, 3]), univariate_param_names),
-    get_time_varying_param_chain.(time_varying_param_names))
+    get_time_varying_param_chain.([gq_prior], time_varying_param_names))
   gq_prior_chains = Chains(cat(getfield.(prior_subchains, :value)..., dims = 2), vcat(names.(prior_subchains)...))
 
   CSV.write(string(results_dir, "prior_gq_samples.csv"), DataFrame(gq_prior_chains))
@@ -253,15 +266,14 @@ end
 #Sample Posterior
 # Random.seed!(county_id)
 posterior_samples = sample(my_model, NUTS(), MCMCThreads(), n_samples, n_chains)
+
+CSV.write(string(results_dir, "posterior_samples_", county_id, ".csv"), DataFrame(posterior_samples))
+
 gq_posterior = generated_quantities(my_model, posterior_samples)
 
-function get_time_varying_param_chain_posterior(param_name)
-  Chains(permutedims(reshape(hcat(getindex.(gq_posterior, Symbol(param_name))...), l + 1, n_samples, n_chains), [2, 1, 3]),
-  Symbol.(string.(string(param_name,"["), string.(0:l), "]")))
-end
-
 posterior_subchains = vcat(Chains(permutedims(reinterpret(reshape, Float64, NamedTuple{Tuple(univariate_param_names)}.(gq_posterior)), [2, 1, 3]), univariate_param_names),
-    get_time_varying_param_chain_posterior.(time_varying_param_names))
+    get_time_varying_param_chain.([gq_posterior], time_varying_param_names))
+
 gq_posterior_chains = Chains(cat(getfield.(posterior_subchains, :value)..., dims = 2), vcat(names.(posterior_subchains)...))
 
 CSV.write(string(results_dir, "posterior_gq_samples_", county_id, ".csv"), DataFrame(gq_posterior_chains))
