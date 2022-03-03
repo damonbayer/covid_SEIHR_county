@@ -12,7 +12,7 @@ if (Sys.info()[["sysname"]] == "Linux") {
   results_dir <- "results"
 }
 
-time_interval_in_days <- 3
+time_interval_in_days <- 7
 
 
 # Process Data ------------------------------------------------------------
@@ -33,6 +33,8 @@ dat_tidy <-
                         .groups = "drop") %>%
               mutate(county = "California"))
 
+
+# Predictive Distributions ------------------------------------------------
 posterior_predictive_samples <-
   dir_ls(results_dir) %>%
   enframe(name = NULL, value = "full_path") %>%
@@ -95,10 +97,11 @@ posterior_predictive_LEMMA_format <-
   select(date, county, quantile, hosp_census_with_covid = hospitalizations, cases) %>%
   arrange(county, quantile, date)
 
+write_csv(posterior_predictive_LEMMA_format, "posterior_predictive_LEMMA_format.csv")
 
-prior_gq_samples <-
+# Generated Quantities ----------------------------------------------------
+prior_gq_samples_all <-
   read_csv(path(results_dir, "prior_gq_samples.csv")) %>%
-  select(-matches("\\[\\d+\\]", )) %>%
   pivot_longer(-c(iteration, chain)) %>%
   mutate(name = name %>%
            str_replace("ₙ|₀ₙ", "_non_omi") %>%
@@ -106,6 +109,25 @@ prior_gq_samples <-
   select(name, value) %>%
   mutate(county = "Prior",
          source = "Prior")
+
+prior_gq_samples <-
+  prior_gq_samples_all %>%
+  filter(str_detect(name, "\\[\\d+\\]", negate = T))
+
+prior_gq_samples_latent_curves <-
+  prior_gq_samples_all %>%
+  filter(str_detect(name, "\\[\\d+\\]")) %>%
+  mutate(time = name %>%
+           str_extract("(?<=\\[)\\d+(?=\\])") %>%
+           as.numeric(),
+         name = name %>%
+           str_extract("^.+(?=\\[)") %>%
+           str_remove("data_")) %>%
+  mutate(name = fct_inorder(name)) %>%
+  group_by(county, name, source, time) %>%
+  median_qi(.width = c(0.5, 0.8, 0.95)) %>%
+  left_join(.,tibble(time = 0:max(.$time),
+                     date = seq(min(raw_dat$date) - time_interval_in_days, by = time_interval_in_days, length.out = max(.$time) + 1)))
 
 posterior_gq_samples_all <-
   dir_ls(results_dir) %>%
@@ -150,6 +172,28 @@ posterior_gq_samples_latent_curves <-
 rm(posterior_gq_samples_all)
 
 # Plot Functions ----------------------------------------------------------
+
+# prior_gq_samples_latent_curves %>%
+#   ggplot(aes(time, value, ymin = .lower, ymax = .upper)) +
+#   facet_wrap(. ~ name, scales = "free_y") +
+#   geom_lineribbon() +
+#   scale_y_continuous(labels = comma) +
+#   scale_fill_brewer() +
+#   cowplot::theme_minimal_grid()
+#
+# ggplot(mapping = aes(date, value)) +
+#   facet_wrap(. ~ name, scale = "free_y") +
+#   geom_lineribbon(data = prior_predictive_intervals, mapping = aes(ymin = .lower, ymax = .upper)) +
+#   geom_point(data = dat_tidy %>% filter(county == "Orange")) +
+#   scale_y_continuous(labels = comma) +
+#   scale_fill_brewer() +
+#   cowplot::theme_minimal_grid()
+#
+#
+# prior_gq_samples %>%
+#   ggplot(aes(value)) +
+#   facet_wrap(. ~ name, scales = "free_x") +
+#   stat_halfeye(normalize = "panels")
 
 make_post_pred_plot <- function(county_name) {
   tmp_posterior_predictive_intervals <-
@@ -203,7 +247,6 @@ make_prior_post_plot <- function(county_name) {
     theme(legend.position = "bottom")
 }
 
-
 make_latent_curves_plot <- function(county_name) {
   if (county_name == "California") {
     return(ggplot())
@@ -246,5 +289,3 @@ ggsave2(filename = "latent_curves_plots.pdf",
         plot = marrangeGrob(plot_tibble$latent_curves_plot_obj, nrow=1, ncol=1),
         width = 12,
         height = 8)
-
-write_csv(posterior_predictive_LEMMA_format, "posterior_predictive_LEMMA_format.csv")

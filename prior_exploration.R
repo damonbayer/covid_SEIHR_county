@@ -1,5 +1,5 @@
 expit <- logistic <- plogis
-
+logit <- qlogis
 target_qunatiles <- c(0.05, 0.5, 0.95)
 z <- rnorm(10000)
 
@@ -7,6 +7,8 @@ z <- rnorm(10000)
 exp(qnorm(p = target_qunatiles, mean = 0.25, sd = 0.2))
 # R₀ₒ
 exp(qnorm(p = target_qunatiles, mean = 1.25, sd = 0.2))
+
+exp(qnorm(p = target_qunatiles, mean = 1.5, sd = 0.2)) * 0.3
 
 # dur_latentₙ_days
 exp(qnorm(p = target_qunatiles, mean = -1.27, sd = 0.25)) * 7
@@ -38,3 +40,12 @@ exp(qnorm(p = target_qunatiles, mean = -0.36, sd = 0.1)) * 7
 exp(qnorm(p = target_qunatiles, mean = -1.54, sd = 0.1)) * 7
 
 
+
+1/expit(qnorm(p = target_qunatiles, mean = -1.1, sd = 0.2))
+
+logistic.(randn(2000) * 0.2 .- 1.1)
+
+
+
+# prop_omicron_only
+expit(qnorm(p = target_qunatiles, mean = 1.2, sd = 0.15))

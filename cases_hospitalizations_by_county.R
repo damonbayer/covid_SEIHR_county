@@ -87,7 +87,7 @@ full_dat <- full_join(cases, hosp) %>%
   select(date, county, cases, tests, hospitalized_covid_patients)
 
 
-time_interval_in_days <- 3
+time_interval_in_days <- 7
 
 earliest_date_elligible_to_report <- ymd("2021-12-12")
 latest_date <- max(full_dat$date, na.rm = T) + 1
@@ -95,7 +95,11 @@ latest_date <- max(full_dat$date, na.rm = T) + 1
 last_date_to_report <- latest_date - 3
 first_date_to_report <-  earliest_date_elligible_to_report + (as.numeric(last_date_to_report - earliest_date_elligible_to_report) %% time_interval_in_days) + 1
 
-prop_omicron_model <- glm(prop_omicron ~ bs(date), data = variants_dat, family = gaussian(link = "logit"))
+prop_omicron_model <- glm(prop_omicron ~ bs(date), data = variants_dat %>% head(-7), family = gaussian(link = "logit"))
+
+ggplot(data = variants_dat %>% head(-5), mapping = aes(date, prop_omicron)) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ bs(x), method.args = list(family = gaussian(link = "logit")))
 
 dat <-
   full_dat %>%
@@ -128,7 +132,9 @@ dat <-
             est_other_tests = round(sum(est_other_tests)),
             hospitalizations = last(hospitalized_covid_patients),
             .groups = "drop") %>%
-  select(-lump)
+  select(-lump) %>%
+  mutate(est_tests = if_else(est_other_tests == 0, est_tests + 1, est_tests),
+         est_other_tests = if_else(est_other_tests == 0,  1, est_other_tests))
 
 initialization_values <-
   full_dat %>%
