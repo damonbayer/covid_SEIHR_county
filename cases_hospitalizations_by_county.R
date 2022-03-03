@@ -84,18 +84,22 @@ hosp <-
 county_pop <- read_csv("data/county_pop.csv") %>% rename_all(str_to_lower)
 
 full_dat <- full_join(cases, hosp) %>%
-  select(date, county, cases, hospitalized_covid_patients)
+  select(date, county, cases, tests, hospitalized_covid_patients)
 
 
-time_interval_in_days <- 3
+time_interval_in_days <- 7
 
 earliest_date_elligible_to_report <- ymd("2021-12-12")
 latest_date <- max(full_dat$date, na.rm = T) + 1
 # last_date_to_report <- latest_date - 10
-last_date_to_report <- latest_date - 6
+last_date_to_report <- latest_date - 3
 first_date_to_report <-  earliest_date_elligible_to_report + (as.numeric(last_date_to_report - earliest_date_elligible_to_report) %% time_interval_in_days) + 1
 
-prop_omicron_model <- glm(prop_omicron ~ bs(date), data = variants_dat, family = gaussian(link = "logit"))
+prop_omicron_model <- glm(prop_omicron ~ bs(date), data = variants_dat %>% head(-7), family = gaussian(link = "logit"))
+
+ggplot(data = variants_dat %>% head(-5), mapping = aes(date, prop_omicron)) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ bs(x), method.args = list(family = gaussian(link = "logit")))
 
 dat <-
   full_dat %>%
@@ -104,13 +108,16 @@ dat <-
          date <= last_date_to_report) %>%
   mutate(days_ago = as.numeric(latest_date - date)) %>%
   mutate(est_prop_reported = case_reporting_delay_ecdf(days_ago)) %>%
-  mutate(est_cases = round(cases / est_prop_reported)) %>%
+  mutate(est_cases = round(cases / est_prop_reported),
+         est_tests = round(tests / est_prop_reported)) %>%
   mutate(.,
          prop_omicron_cases = predict(prop_omicron_model,
                                       newdata = .,
                                       type = "response")) %>%
   mutate(est_omicron_cases = prop_omicron_cases * est_cases,
-         est_other_cases = (1- prop_omicron_cases) * est_cases) %>%
+         est_other_cases = (1- prop_omicron_cases) * est_cases,
+         est_omicron_tests = prop_omicron_cases * est_tests,
+         est_other_tests = (1- prop_omicron_cases) * est_tests) %>%
   mutate(lump = floor(as.numeric(date - min(date)) / time_interval_in_days) + 1) %>%
   group_by(lump, county) %>%
   summarize(time = lump[1] * time_interval_in_days / 7,
@@ -119,19 +126,15 @@ dat <-
             est_cases = sum(est_cases),
             est_omicron_cases = round(sum(est_omicron_cases)),
             est_other_cases = round(sum(est_other_cases)),
+            tests = sum(tests),
+            est_tests = sum(est_tests),
+            est_omicron_tests = round(sum(est_omicron_tests)),
+            est_other_tests = round(sum(est_other_tests)),
             hospitalizations = last(hospitalized_covid_patients),
             .groups = "drop") %>%
-  select(-lump)
-
-dat %>%
-  filter(county == "Orange") %>%
-  select(date, cases, est_cases, est_omicron_cases, est_other_cases) %>%
-  pivot_longer(-date) %>%
-  ggplot(aes(date, value, group = name, color = name)) +
-  geom_line() +
-  geom_point() +
-  cowplot::theme_minimal_grid() +
-  scale_y_continuous(labels = scales::comma)
+  select(-lump) %>%
+  mutate(est_tests = if_else(est_other_tests == 0, est_tests + 1, est_tests),
+         est_other_tests = if_else(est_other_tests == 0,  1, est_other_tests))
 
 initialization_values <-
   full_dat %>%
@@ -145,14 +148,16 @@ initialization_values <-
   mutate(days_ago = as.numeric(latest_date - date)) %>%
   mutate(est_prop_reported = case_reporting_delay_ecdf(days_ago)) %>%
   mutate(est_cases = round(cases / est_prop_reported)) %>%
-  mutate(est_omicron_cases = round(prop_omicron_cases * est_cases) + 1,
-         est_other_cases = round((1 - prop_omicron_cases) * est_cases) - 1) %>%
+  mutate(est_omicron_cases = round(prop_omicron_cases * est_cases),
+         est_other_cases = round((1 - prop_omicron_cases) * est_cases)) %>%
   group_by(county) %>%
   summarize(est_cases = sum(est_cases),
             est_omicorn_cases = sum(est_omicron_cases),
             est_other_cases = sum(est_other_cases),
-            hospitalizations = last(hospitalized_covid_patients))
-
+            hospitalizations = last(hospitalized_covid_patients)) %>%
+  pivot_longer(-county) %>%
+  mutate(value = if_else(value == 0, 1, value)) %>%
+  pivot_wider(county)
 
 county_id_key <-
   dat %>%
