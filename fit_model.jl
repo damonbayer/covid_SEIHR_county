@@ -2,13 +2,6 @@ using DrWatson
 using Revise
 using JLD2
 using FileIO
-county_id =
-    if length(ARGS) == 0
-        # 25
-        2
-    else
-      parse(Int64, ARGS[1])
-    end
 using CSV
 using DataFrames
 using Turing
@@ -21,6 +14,19 @@ using Random
 using LineSearches
 
 using covid_SEIHR_county
+
+county_id =
+    if length(ARGS) == 0
+        1
+    else
+      parse(Int64, ARGS[1])
+    end
+
+priors_only = county_id == 0
+
+if priors_only
+  county_id = 29
+end
 
 if Sys.isapple()
   results_dir = "results/"
@@ -168,9 +174,8 @@ prob1 = ODEProblem(seir_ode_log!,
     )
 
 @model function bayes_seihr(data_est_other_cases, data_est_omicron_cases, data_hospitalizations, data_est_other_tests, data_est_omicron_tests, obstimes, param_change_times, extra_ode_precision)
-  # println(0)
   l = length(data_est_other_cases)
-  # println(1)
+
   # Priors
   R0_params_non_centered ~ MvNormal(l + 3, 1) # +3 for sigma, non_omicron_init, omicron_init
   prop_omicron_only_init_non_centered ~ Normal()
@@ -192,7 +197,7 @@ prob1 = ODEProblem(seir_ode_log!,
 
   ϕ_cases_non_centered ~ Exponential()
   ϕ_hospitalizations_non_centered ~ Exponential()
-  # println(2)
+
   # Transformations
   R₀_init_non_centered_non_omicron = R0_params_non_centered[1]
   R₀_init_non_centered_omicron = R0_params_non_centered[2]
@@ -252,7 +257,6 @@ prob1 = ODEProblem(seir_ode_log!,
   # Time-varying parameters
   β_t_values_no_init_non_omicron = exp.(log(R₀_init_non_omicron) .+ cumsum(vec(log_R0_steps_non_centered) * σ_R0)) * ν_non_omicron
   β_t_values_no_init_omicron = exp.(log(R₀_init_omicron) .+ cumsum(vec(log_R0_steps_non_centered) * σ_R0)) * ν_omicron
-  # println(3)
   prob = remake(prob1, u0 = log.(u0), p = [β_init_non_omicron, β_init_omicron, γ_non_omicron, γ_omicron, ν_non_omicron, ν_omicron, η_non_omicron, η_omicron, IHR_non_omicron, IHR_omicron], tspan = (0.0, obstimes[end]))
   
   function param_affect_β!(integrator)
@@ -273,7 +277,6 @@ prob1 = ODEProblem(seir_ode_log!,
     Turing.@addlogprob! -Inf
     return
   end
-  # println(4)
   sol_reg_scale_array = exp.(Array(sol))
 
   sol_new_cases_other = sol_reg_scale_array[10, 2:end] - sol_reg_scale_array[10, 1:(end-1)]
@@ -289,7 +292,6 @@ prob1 = ODEProblem(seir_ode_log!,
     data_est_omicron_cases[i] ~ NegativeBinomial2(max(omicron_cases_mean[i], 0.0), ϕ_cases)
     data_hospitalizations[i] ~ NegativeBinomial2(max(hospitalizations_mean[i], 0.0), ϕ_hospitalizations)
   end
-  # println(5)
   return (
     σ_R0 = σ_R0,
     case_detection_rate_other = case_detection_rate_other,
@@ -328,7 +330,6 @@ prob1 = ODEProblem(seir_ode_log!,
     omicron_cases_mean = omicron_cases_mean,
     hospitalizations_mean = hospitalizations_mean
   )
-  # println(6)
 end;
 
 n_samples = 2000
@@ -367,6 +368,24 @@ my_model_forecast_missing = bayes_seihr(
 # Sample Posterior
 # Should sample prior sometimes
 
+if priors_only
+  Random.seed!(county_id)
+  prior_samples = sample(my_model, Prior(), MCMCThreads(), n_samples, n_chains)
+  Random.seed!(county_id)
+  prior_samples_forecast_randn = augment_chains_with_forecast_samples(Chains(prior_samples, :parameters), my_model, my_model_forecast, "randn")
+  prior_indices_to_keep = .!isnothing.(generated_quantities(my_model_forecast, prior_samples_forecast_randn));
+  prior_samples_forecast_randn = ChainsCustomIndex(prior_samples_forecast_randn, prior_indices_to_keep);
+  
+  wsave(joinpath(results_dir, "prior_samples.jld2"), @dict prior_samples)
+  
+  Random.seed!(county_id)
+  prior_predictive_randn = predict(my_model_forecast_missing, prior_samples_forecast_randn)
+  CSV.write(joinpath(results_dir, "prior_predictive.csv"), DataFrame(prior_predictive_randn))
+  
+  Random.seed!(county_id)
+  gq_randn = get_gq_chains(my_model_forecast, prior_samples_forecast_randn);
+  CSV.write(joinpath(results_dir, "prior_generated_quantities.csv"), DataFrame(gq_randn))
+end
 
 MAP_init = optimize_many_MAP(my_model, 100, n_chains, true)
 Random.seed!(county_id)
