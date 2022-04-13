@@ -39,18 +39,12 @@ ckan <- quiet(ckanr::src_ckan("https://data.ca.gov"))
 resources <- rbind(resource_search("name:covid-19", as = "table")$results,
                    resource_search("name:hospitals by county", as = "table")$results)
 
-# resource_ids <- list(cases = resources$resource_id[resources$name == "COVID-19 Cases"],
-#                      tests = resources$resource_id[resources$name == "COVID-19 Testing"],
-#                      hosp = resources$resource_id[resources$name == "Hospitals By County"])
 
-resource_ids <- list(cases_deaths = resources$id[resources$name == "Statewide COVID-19 Cases Deaths Tests"],
-                     hosp = resources$id[resources$name == "Statewide Covid-19 Hospital County Data"])
+cases_deaths_url <- resources %>% filter(name == "Statewide COVID-19 Cases Deaths Tests") %>% pull(url)
+hosp_url <- resources %>% filter(name == "Statewide Covid-19 Hospital County Data") %>% pull(url)
 
-
-# pull resources into data frames (adds extra cols _id and _full_text)
 cases <-
-  tbl(src = ckan$con, from = resource_ids$cases_deaths) %>%
-  as_tibble() %>%
+  read_csv(cases_deaths_url) %>%
   mutate(date = lubridate::ymd(date),
          deaths = as.integer(deaths),
          reported_cases = as.integer(reported_cases),
@@ -66,8 +60,7 @@ cases <-
 
 
 hosp <-
-  tbl(src = ckan$con, from = resource_ids$hosp) %>%
-  as_tibble() %>%
+  read_csv(hosp_url) %>%
   mutate(todays_date = lubridate::ymd(todays_date),
          hospitalized_covid_patients = as.integer(hospitalized_covid_patients),
          icu_covid_confirmed_patients = as.integer(icu_covid_confirmed_patients),

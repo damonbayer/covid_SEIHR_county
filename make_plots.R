@@ -36,16 +36,15 @@ dat_tidy <-
 
 # Predictive Distributions ------------------------------------------------
 posterior_predictive_samples <-
-  dir_ls(results_dir) %>%
+  path(results_dir, "posterior_predictive") %>%
+  dir_ls() %>%
   enframe(name = NULL, value = "full_path") %>%
   mutate(file_name = full_path %>%
            path_file() %>%
            path_ext_remove()) %>%
-  filter(str_ends(file_name, "\\d+")) %>%
   mutate(county_id = file_name %>%
-           str_extract("\\d+$") %>%
+           str_extract("(?<=county_id=)\\d+") %>%
            as.numeric()) %>%
-  filter(str_detect(file_name, "posterior_predictive")) %>%
   mutate(results = full_path %>%
            map(read_csv)) %>%
   select(county_id, results) %>%
@@ -97,15 +96,14 @@ posterior_predictive_LEMMA_format <-
   select(date, county, quantile, hosp_census_with_covid = hospitalizations, cases) %>%
   arrange(county, quantile, date)
 
+rm(posterior_predictive_samples)
+
 write_csv(posterior_predictive_LEMMA_format, "posterior_predictive_LEMMA_format.csv")
 
 # Generated Quantities ----------------------------------------------------
 prior_gq_samples_all <-
-  read_csv(path(results_dir, "prior_gq_samples.csv")) %>%
+  read_csv(path(results_dir, "prior_generated_quantities.csv")) %>%
   pivot_longer(-c(iteration, chain)) %>%
-  mutate(name = name %>%
-           str_replace("ₙ|₀ₙ", "_non_omi") %>%
-           str_replace("ₒ|₀ₒ", "_omicron")) %>%
   select(name, value) %>%
   mutate(county = "Prior",
          source = "Prior")
@@ -114,7 +112,7 @@ prior_gq_samples <-
   prior_gq_samples_all %>%
   filter(str_detect(name, "\\[\\d+\\]", negate = T))
 
-prior_gq_samples_latent_curves <-
+prior_gq_samples_time_varying <-
   prior_gq_samples_all %>%
   filter(str_detect(name, "\\[\\d+\\]")) %>%
   mutate(time = name %>%
@@ -129,25 +127,23 @@ prior_gq_samples_latent_curves <-
   left_join(.,tibble(time = 0:max(.$time),
                      date = seq(min(raw_dat$date) - time_interval_in_days, by = time_interval_in_days, length.out = max(.$time) + 1)))
 
+rm(prior_gq_samples_all)
+
 posterior_gq_samples_all <-
-  dir_ls(results_dir) %>%
+  path(results_dir, "generated_quantities") %>%
+  dir_ls() %>%
   enframe(name = NULL, value = "full_path") %>%
   mutate(file_name = full_path %>%
            path_file() %>%
            path_ext_remove()) %>%
-  filter(str_ends(file_name, "\\d+")) %>%
   mutate(county_id = file_name %>%
-           str_extract("\\d+$") %>%
+           str_extract("(?<=county_id=)\\d+") %>%
            as.numeric()) %>%
-  filter(str_detect(file_name, "posterior_gq_samples")) %>%
   mutate(results = full_path %>%
            map(read_csv)) %>%
   select(county_id, results) %>%
   unnest(results) %>%
   pivot_longer(-c(county_id, iteration, chain)) %>%
-  mutate(name = name %>%
-           str_replace("ₙ|₀ₙ", "_non_omi") %>%
-           str_replace("ₒ|₀ₒ", "_omicron")) %>%
   left_join(county_id_key %>% rename(county_id = id)) %>%
   select(county, name, value)
 
@@ -155,7 +151,7 @@ posterior_gq_samples <-
   posterior_gq_samples_all %>%
   filter(str_detect(name, "\\[\\d+\\]", negate = T))
 
-posterior_gq_samples_latent_curves <-
+posterior_gq_samples_time_varying <-
   posterior_gq_samples_all %>%
   filter(str_detect(name, "\\[\\d+\\]")) %>%
   mutate(time = name %>%
@@ -173,13 +169,13 @@ rm(posterior_gq_samples_all)
 
 # Plot Functions ----------------------------------------------------------
 
-# prior_gq_samples_latent_curves %>%
-#   ggplot(aes(time, value, ymin = .lower, ymax = .upper)) +
-#   facet_wrap(. ~ name, scales = "free_y") +
-#   geom_lineribbon() +
-#   scale_y_continuous(labels = comma) +
-#   scale_fill_brewer() +
-#   cowplot::theme_minimal_grid()
+prior_gq_samples_time_varying %>%
+  ggplot(aes(time, value, ymin = .lower, ymax = .upper)) +
+  facet_wrap(. ~ name, scales = "free_y") +
+  geom_lineribbon() +
+  scale_y_continuous(labels = comma) +
+  scale_fill_brewer() +
+  cowplot::theme_minimal_grid()
 #
 # ggplot(mapping = aes(date, value)) +
 #   facet_wrap(. ~ name, scale = "free_y") +
@@ -286,6 +282,6 @@ ggsave2(filename = "prior_post_plots.pdf",
         height = 8)
 
 ggsave2(filename = "latent_curves_plots.pdf",
-        plot = marrangeGrob(plot_tibble$latent_curves_plot_obj, nrow=1, ncol=1),
+        plot = marrangeGrob(plot_tibble$latent_curves_plot_obj[-1], nrow=1, ncol=1),
         width = 12,
         height = 8)
