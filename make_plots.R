@@ -146,7 +146,7 @@ posterior_gq_samples_all <-
   pivot_longer(-c(county_id, iteration, chain)) %>%
   left_join(county_id_key %>% rename(county_id = id)) %>%
   select(county, name, value)
-
+#maybe put processing inside map to save ram?
 posterior_gq_samples <-
   posterior_gq_samples_all %>%
   filter(str_detect(name, "\\[\\d+\\]", negate = T))
@@ -169,27 +169,14 @@ rm(posterior_gq_samples_all)
 
 # Plot Functions ----------------------------------------------------------
 
-prior_gq_samples_time_varying %>%
-  ggplot(aes(time, value, ymin = .lower, ymax = .upper)) +
-  facet_wrap(. ~ name, scales = "free_y") +
-  geom_lineribbon() +
-  scale_y_continuous(labels = comma) +
-  scale_fill_brewer() +
-  cowplot::theme_minimal_grid()
-#
-# ggplot(mapping = aes(date, value)) +
-#   facet_wrap(. ~ name, scale = "free_y") +
-#   geom_lineribbon(data = prior_predictive_intervals, mapping = aes(ymin = .lower, ymax = .upper)) +
-#   geom_point(data = dat_tidy %>% filter(county == "Orange")) +
+# prior_gq_samples_time_varying %>%
+#   ggplot(aes(time, value, ymin = .lower, ymax = .upper)) +
+#   facet_wrap(. ~ name, scales = "free_y") +
+#   geom_lineribbon() +
 #   scale_y_continuous(labels = comma) +
 #   scale_fill_brewer() +
 #   cowplot::theme_minimal_grid()
-#
-#
-# prior_gq_samples %>%
-#   ggplot(aes(value)) +
-#   facet_wrap(. ~ name, scales = "free_x") +
-#   stat_halfeye(normalize = "panels")
+
 
 make_post_pred_plot <- function(county_name) {
   tmp_posterior_predictive_intervals <-
@@ -243,11 +230,11 @@ make_prior_post_plot <- function(county_name) {
     theme(legend.position = "bottom")
 }
 
-make_latent_curves_plot <- function(county_name) {
+make_time_varying_plot <- function(county_name) {
   if (county_name == "California") {
     return(ggplot())
   }
-  posterior_gq_samples_latent_curves %>%
+  posterior_gq_samples_time_varying %>%
     filter(county == county_name) %>%
     ggplot(aes(date, value, ymin = .lower, ymax = .upper)) +
     facet_wrap(. ~ name,
@@ -269,7 +256,7 @@ plot_tibble <-
   tibble(county_name = unique(posterior_predictive_intervals$county)) %>%
   mutate(post_pred_plot_obj = map(county_name, make_post_pred_plot),
          prior_post_plot_obj = map(county_name, make_prior_post_plot),
-         latent_curves_plot_obj = map(county_name, make_latent_curves_plot))
+         time_varying_plot_obj = map(county_name, make_time_varying_plot))
 
 ggsave2(filename = "post_pred_plots.pdf",
         plot = marrangeGrob(plot_tibble$post_pred_plot_obj, nrow=1, ncol=1),
@@ -281,7 +268,7 @@ ggsave2(filename = "prior_post_plots.pdf",
         width = 12,
         height = 8)
 
-ggsave2(filename = "latent_curves_plots.pdf",
-        plot = marrangeGrob(plot_tibble$latent_curves_plot_obj[-1], nrow=1, ncol=1),
+ggsave2(filename = "time_varying_plots.pdf",
+        plot = marrangeGrob(plot_tibble$time_varying_plot_obj[-1], nrow=1, ncol=1),
         width = 12,
         height = 8)
