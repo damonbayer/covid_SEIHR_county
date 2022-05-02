@@ -28,7 +28,7 @@ if priors_only
   county_id = 29
 end
 
-if Sys.isapple()
+if Sys.isapple() | Sys.iswindows()
   results_dir = "results/"
 else
   results_dir = "//dfs6/pub/bayerd/covid_SEIHR_county/results/"
@@ -78,6 +78,7 @@ data_tests_forecast = vcat(data_tests, repeat([data_tests[end]], n_forecast_time
 
 data_est_other_tests = dat[:, :est_other_tests]
 data_est_other_tests_forecast = vcat(data_est_other_tests, repeat([data_est_other_tests[end]], n_forecast_times))
+end_other_cases_time = findfirst(iszero, data_est_other_cases)
 
 data_est_omicron_tests = dat[:, :est_omicron_tests]
 data_est_omicron_tests_forecast = vcat(data_est_omicron_tests, repeat([data_est_omicron_tests[end]], n_forecast_times))
@@ -173,7 +174,8 @@ prob1 = ODEProblem(seir_ode_log!,
     ones(10)
     )
 
-@model function bayes_seihr(data_est_other_cases, data_est_omicron_cases, data_hospitalizations, data_est_other_tests, data_est_omicron_tests, obstimes, param_change_times, extra_ode_precision)
+@model function bayes_seihr(data_est_other_cases, data_est_omicron_cases, data_hospitalizations, 
+  data_est_other_tests, data_est_omicron_tests, obstimes, param_change_times, extra_ode_precision,end_other_cases_time)
   l = length(data_est_other_cases)
 
   # Priors
@@ -288,9 +290,11 @@ prob1 = ODEProblem(seir_ode_log!,
   hospitalizations_mean = sol_hospitalizations
 
   for i in 1:l
-    data_est_other_cases[i] ~ NegativeBinomial2(max(other_cases_mean[i], 0.0), ϕ_cases)
+    if (i < end_other_cases_time)
+      data_est_other_cases[i] ~ NegativeBinomial2(max(other_cases_mean[i], 0.0), ϕ_cases)
+    end 
     data_est_omicron_cases[i] ~ NegativeBinomial2(max(omicron_cases_mean[i], 0.0), ϕ_cases)
-    data_hospitalizations[i] ~ NegativeBinomial2(max(hospitalizations_mean[i], 0.0), ϕ_hospitalizations)
+    data_hospitalizations[i] ~ Poisson(max(hospitalizations_mean[i], 0.0))
   end
   return (
     σ_R0 = σ_R0,
@@ -343,7 +347,8 @@ my_model = bayes_seihr(
   data_est_omicron_tests,
   obstimes,
   param_change_times,
-  false)
+  false,
+  end_other_cases_time)
 
 my_model_forecast = bayes_seihr(
   data_est_other_cases_forecast,
@@ -353,7 +358,8 @@ my_model_forecast = bayes_seihr(
   data_est_omicron_tests_forecast,
   obstimes_forecast,
   param_change_times_forecast,
-  true)
+  true,
+  end_other_cases_time)
 
 my_model_forecast_missing = bayes_seihr(
   missing_est_other_cases_forecast,
@@ -363,7 +369,8 @@ my_model_forecast_missing = bayes_seihr(
   data_est_omicron_tests_forecast,
   obstimes_forecast,
   param_change_times_forecast,
-  true)
+  true,
+  end_other_cases_time)
 
 # Sample Posterior
 # Should sample prior sometimes
@@ -389,14 +396,20 @@ end
 
 MAP_init = optimize_many_MAP(my_model, 100, n_chains, true)
 Random.seed!(county_id)
+n_samples = 100
+n_chains = 1
+
 posterior_samples = sample(my_model, NUTS(), MCMCThreads(), n_samples, n_chains, init_params = MAP_init * 0.95)
 
+
+save_object("county1_posterior.jld2", posterior_samples)
+
+posterior_samples = load_object("county1_posterior.jld2")
 posterior_samples_forecast_randn = augment_chains_with_forecast_samples(Chains(posterior_samples, :parameters), my_model, my_model_forecast, "randn")
 
 indices_to_keep = .!isnothing.(generated_quantities(my_model_forecast, posterior_samples_forecast_randn));
 
 posterior_samples_forecast_randn = ChainsCustomIndex(posterior_samples_forecast_randn, indices_to_keep);
-
 wsave(joinpath(results_dir, "posterior_samples", savename("posterior_samples", savename_dict, "jld2")), @dict posterior_samples)
 
 Random.seed!(county_id)
