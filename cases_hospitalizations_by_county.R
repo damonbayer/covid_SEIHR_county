@@ -12,18 +12,20 @@ if (Sys.info()[["sysname"]] == "Linux") {
 
 case_reporting_delay_ecdf <- read_rds("case_reporting_delay_ecdf.rds")
 
-variants_dat <- read_tsv("https://raw.githubusercontent.com/blab/rt-from-frequency-dynamics/master/data/omicron-us/omicron-us_location-variant-sequence-counts.tsv") %>%
-  filter(location == "California") %>%
-  select(-location) %>%
-  distinct() %>%
-  pivot_wider(names_from = variant, values_from = sequences, values_fill = 0) %>%
-  pivot_longer(-date, names_to = "variant", values_to = "sequences") %>%
-  mutate(sequences = sequences + 1) %>%
-  group_by(date) %>%
-  summarize(variant = variant,
-            prop = sequences / sum(sequences)) %>%
-  filter(variant == "Omicron") %>%
-  select(date, prop_omicron = prop)
+prop_omicron_county_dat <- read_csv("data/prop_omicron_county_dat.csv")
+
+# variants_dat <- read_tsv("https://raw.githubusercontent.com/blab/rt-from-frequency-dynamics/master/data/omicron-us/omicron-us_location-variant-sequence-counts.tsv") %>%
+#   filter(location == "California") %>%
+#   select(-location) %>%
+#   distinct() %>%
+#   pivot_wider(names_from = variant, values_from = sequences, values_fill = 0) %>%
+#   pivot_longer(-date, names_to = "variant", values_to = "sequences") %>%
+#   mutate(sequences = sequences + 1) %>%
+#   group_by(date) %>%
+#   summarize(variant = variant,
+#             prop = sequences / sum(sequences)) %>%
+#   filter(variant == "Omicron") %>%
+#   select(date, prop_omicron = prop)
 
 quiet <- function(x) {
   sink(tempfile())
@@ -88,11 +90,11 @@ latest_date <- max(full_dat$date, na.rm = T) + 1
 last_date_to_report <- latest_date - 3
 first_date_to_report <-  earliest_date_elligible_to_report + (as.numeric(last_date_to_report - earliest_date_elligible_to_report) %% time_interval_in_days) + 1
 
-prop_omicron_model <- glm(prop_omicron ~ bs(date), data = variants_dat %>% head(-7), family = gaussian(link = "logit"))
-
-ggplot(data = variants_dat %>% head(-5), mapping = aes(date, prop_omicron)) +
-  geom_point() +
-  geom_smooth(method = "glm", formula = y ~ bs(x), method.args = list(family = gaussian(link = "logit")))
+# prop_omicron_model <- glm(prop_omicron ~ bs(date), data = variants_dat %>% head(-7), family = gaussian(link = "logit"))
+#
+# ggplot(data = variants_dat %>% head(-5), mapping = aes(date, prop_omicron)) +
+#   geom_point() +
+#   geom_smooth(method = "glm", formula = y ~ bs(x), method.args = list(family = gaussian(link = "logit")))
 
 dat <-
   full_dat %>%
@@ -103,10 +105,11 @@ dat <-
   mutate(est_prop_reported = case_reporting_delay_ecdf(days_ago)) %>%
   mutate(est_cases = round(cases / est_prop_reported),
          est_tests = round(tests / est_prop_reported)) %>%
-  mutate(.,
-         prop_omicron_cases = predict(prop_omicron_model,
-                                      newdata = .,
-                                      type = "response")) %>%
+  # mutate(.,
+  #        prop_omicron_cases = predict(prop_omicron_model,
+  #                                     newdata = .,
+  #                                     type = "response")) %>%
+  left_join(prop_omicron_county_dat) %>%
   mutate(est_omicron_cases = prop_omicron_cases * est_cases,
          est_other_cases = (1- prop_omicron_cases) * est_cases,
          est_omicron_tests = prop_omicron_cases * est_tests,
@@ -134,10 +137,11 @@ initialization_values <-
   drop_na() %>%
   filter(date >= first_date_to_report - 6,
          date <= first_date_to_report) %>%
-  mutate(.,
-         prop_omicron_cases = predict(prop_omicron_model,
-                                      newdata = .,
-                                      type = "response")) %>%
+  # mutate(.,
+  #        prop_omicron_cases = predict(prop_omicron_model,
+  #                                     newdata = .,
+  #                                     type = "response")) %>%
+  left_join(prop_omicron_county_dat) %>%
   mutate(days_ago = as.numeric(latest_date - date)) %>%
   mutate(est_prop_reported = case_reporting_delay_ecdf(days_ago)) %>%
   mutate(est_cases = round(cases / est_prop_reported)) %>%
