@@ -80,6 +80,10 @@ data_est_other_tests = dat[:, :est_other_tests]
 data_est_other_tests_forecast = vcat(data_est_other_tests, repeat([data_est_other_tests[end]], n_forecast_times))
 end_other_cases_time = findfirst(iszero, data_est_other_cases)
 
+if isnothing(end_other_cases_time)
+  end_other_cases_time = length(data_est_other_cases) + 1
+end
+
 data_est_omicron_tests = dat[:, :est_omicron_tests]
 data_est_omicron_tests_forecast = vcat(data_est_omicron_tests, repeat([data_est_omicron_tests[end]], n_forecast_times))
 
@@ -175,7 +179,7 @@ prob1 = ODEProblem(seir_ode_log!,
     )
 
 @model function bayes_seihr(data_est_other_cases, data_est_omicron_cases, data_hospitalizations, 
-  data_est_other_tests, data_est_omicron_tests, obstimes, param_change_times, extra_ode_precision,end_other_cases_time)
+  data_est_other_tests, data_est_omicron_tests, obstimes, param_change_times, extra_ode_precision, end_other_cases_time)
   l = length(data_est_other_cases)
 
   # Priors
@@ -270,9 +274,9 @@ prob1 = ODEProblem(seir_ode_log!,
   param_callback = PresetTimeCallback(param_change_times, param_affect_β!, save_positions = (false, false))
 
   if extra_ode_precision
-    sol = solve(prob, Tsit5(), callback = param_callback, saveat = obstimes, save_start = true, verbose = false, abstol = 1e-9, reltol = 1e-6)  
+    sol = solve(prob, Tsit5(), callback = param_callback, saveat = obstimes, save_start = true, verbose = false, abstol = 1e-11, reltol = 1e-8)
   else
-    sol = solve(prob, Tsit5(), callback = param_callback, saveat = obstimes, save_start = true, verbose = false)
+    sol = solve(prob, Tsit5(), callback = param_callback, saveat = obstimes, save_start = true, verbose = false, abstol = 1e-9, reltol = 1e-6)
   end
   
   if sol.retcode != :Success
@@ -394,10 +398,10 @@ if priors_only
   CSV.write(joinpath(results_dir, "prior_generated_quantities.csv"), DataFrame(gq_randn))
 end
 
-MAP_init = optimize_many_MAP(my_model, 100, n_chains, true)
+MAP_init = optimize_many_MAP(my_model, 20, n_chains, true)
 Random.seed!(county_id)
 n_samples = 100
-n_chains = 1
+n_chains = 4
 
 posterior_samples = sample(my_model, NUTS(), MCMCThreads(), n_samples, n_chains, init_params = MAP_init * 0.95)
 

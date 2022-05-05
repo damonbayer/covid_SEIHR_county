@@ -9,11 +9,11 @@
 #SBATCH -o julia-%A-%a.out
 #SBATCH --mail-type=begin,end
 #SBATCH --mail-user=bayerd@uci.edu
-#SBATCH --array=1-56
+#SBATCH --array=1,56
 
 module purge
-module load julia
-cd //data/homezvol2/bayerd/covid_SEIHR_county/
+module load julia-lts
+cd //dfs6/pub/bayerd/covid_SEIHR_county
 
 if [ $SLURM_ARRAY_TASK_ID == 1 ]; then
 sbatch --depend=afterany:$SLURM_ARRAY_JOB_ID update_projections_3.sh

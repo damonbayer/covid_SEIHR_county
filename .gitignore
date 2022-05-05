@@ -90,3 +90,4 @@ Manifest.toml
 results
 .DS_Store
 Project.toml
+/.texpadtmp

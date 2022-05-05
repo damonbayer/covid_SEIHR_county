@@ -65,6 +65,7 @@ posterior_predictive_samples <-
 posterior_predictive_intervals <-
   posterior_predictive_samples %>%
   select(county_id, time, name, value) %>%
+  drop_na() %>%
   group_by(county_id, time, name) %>%
   median_qi(.width = c(0.5, 0.8, 0.95)) %>%
   left_join(.,tibble(time = 1:max(.$time),

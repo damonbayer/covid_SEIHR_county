@@ -12,6 +12,6 @@
 
 module purge
 module load R
-cd //data/homezvol2/bayerd/covid_SEIHR_county/
+cd //dfs6/pub/bayerd/covid_SEIHR_county
 
 R CMD BATCH --no-save make_plots.R
