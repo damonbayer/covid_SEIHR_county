@@ -12,12 +12,13 @@ using ForwardDiff
 using Optim
 using Random
 using LineSearches
+using Pathfinder
 
 using covid_SEIHR_county
 
 county_id =
     if length(ARGS) == 0
-        3
+       41
     else
       parse(Int64, ARGS[1])
     end
@@ -29,7 +30,7 @@ if priors_only
 end
 
 if Sys.isapple() | Sys.iswindows()
-  results_dir = "results/"
+  results_dir = "results_vi/"
 else
   results_dir = "//dfs6/pub/bayerd/covid_SEIHR_county/results/"
 end
@@ -79,10 +80,6 @@ data_tests_forecast = vcat(data_tests, repeat([data_tests[end]], n_forecast_time
 data_est_other_tests = dat[:, :est_other_tests]
 data_est_other_tests_forecast = vcat(data_est_other_tests, repeat([data_est_other_tests[end]], n_forecast_times))
 end_other_cases_time = findfirst(iszero, data_est_other_cases)
-
-if isnothing(end_other_cases_time)
-  end_other_cases_time = length(data_est_other_cases) + 1
-end
 
 data_est_omicron_tests = dat[:, :est_omicron_tests]
 data_est_omicron_tests_forecast = vcat(data_est_omicron_tests, repeat([data_est_omicron_tests[end]], n_forecast_times))
@@ -179,7 +176,7 @@ prob1 = ODEProblem(seir_ode_log!,
     )
 
 @model function bayes_seihr(data_est_other_cases, data_est_omicron_cases, data_hospitalizations, 
-  data_est_other_tests, data_est_omicron_tests, obstimes, param_change_times, extra_ode_precision, end_other_cases_time)
+  data_est_other_tests, data_est_omicron_tests, obstimes, param_change_times, extra_ode_precision,end_other_cases_time)
   l = length(data_est_other_cases)
 
   # Priors
@@ -274,9 +271,9 @@ prob1 = ODEProblem(seir_ode_log!,
   param_callback = PresetTimeCallback(param_change_times, param_affect_β!, save_positions = (false, false))
 
   if extra_ode_precision
-    sol = solve(prob, Tsit5(), callback = param_callback, saveat = obstimes, save_start = true, verbose = false, abstol = 1e-11, reltol = 1e-8)
+    sol = solve(prob, Tsit5(), callback = param_callback, saveat = obstimes, save_start = true, verbose = false, abstol = 1e-9, reltol = 1e-6)  
   else
-    sol = solve(prob, Tsit5(), callback = param_callback, saveat = obstimes, save_start = true, verbose = false, abstol = 1e-9, reltol = 1e-6)
+    sol = solve(prob, Tsit5(), callback = param_callback, saveat = obstimes, save_start = true, verbose = false)
   end
   
   if sol.retcode != :Success
@@ -294,9 +291,15 @@ prob1 = ODEProblem(seir_ode_log!,
   hospitalizations_mean = sol_hospitalizations
 
   for i in 1:l
-    if (i < end_other_cases_time)
+    if (!isnothing(end_other_cases_time))
+      if (i < end_other_cases_time)
+        data_est_other_cases[i] ~ NegativeBinomial2(max(other_cases_mean[i], 0.0), ϕ_cases)
+        println("hello")
+      end 
+    else 
       data_est_other_cases[i] ~ NegativeBinomial2(max(other_cases_mean[i], 0.0), ϕ_cases)
     end 
+
     data_est_omicron_cases[i] ~ NegativeBinomial2(max(omicron_cases_mean[i], 0.0), ϕ_cases)
     data_hospitalizations[i] ~ Poisson(max(hospitalizations_mean[i], 0.0))
   end
@@ -379,35 +382,38 @@ my_model_forecast_missing = bayes_seihr(
 # Sample Posterior
 # Should sample prior sometimes
 
-if priors_only
-  Random.seed!(county_id)
-  prior_samples = sample(my_model, Prior(), MCMCThreads(), n_samples, n_chains)
-  Random.seed!(county_id)
-  prior_samples_forecast_randn = augment_chains_with_forecast_samples(Chains(prior_samples, :parameters), my_model, my_model_forecast, "randn")
-  prior_indices_to_keep = .!isnothing.(generated_quantities(my_model_forecast, prior_samples_forecast_randn));
-  prior_samples_forecast_randn = ChainsCustomIndex(prior_samples_forecast_randn, prior_indices_to_keep);
+# if priors_only
+#   Random.seed!(county_id)
+#   prior_samples = sample(my_model, Prior(), MCMCThreads(), n_samples, n_chains)
+#   Random.seed!(county_id)
+#   prior_samples_forecast_randn = augment_chains_with_forecast_samples(Chains(prior_samples, :parameters), my_model, my_model_forecast, "randn")
+#   prior_indices_to_keep = .!isnothing.(generated_quantities(my_model_forecast, prior_samples_forecast_randn));
+#   prior_samples_forecast_randn = ChainsCustomIndex(prior_samples_forecast_randn, prior_indices_to_keep);
   
-  wsave(joinpath(results_dir, "prior_samples.jld2"), @dict prior_samples)
+#   wsave(joinpath(results_dir, "prior_samples.jld2"), @dict prior_samples)
   
-  Random.seed!(county_id)
-  prior_predictive_randn = predict(my_model_forecast_missing, prior_samples_forecast_randn)
-  CSV.write(joinpath(results_dir, "prior_predictive.csv"), DataFrame(prior_predictive_randn))
+#   Random.seed!(county_id)
+#   prior_predictive_randn = predict(my_model_forecast_missing, prior_samples_forecast_randn)
+#   CSV.write(joinpath(results_dir, "prior_predictive.csv"), DataFrame(prior_predictive_randn))
   
-  Random.seed!(county_id)
-  gq_randn = get_gq_chains(my_model_forecast, prior_samples_forecast_randn);
-  CSV.write(joinpath(results_dir, "prior_generated_quantities.csv"), DataFrame(gq_randn))
-end
+#   Random.seed!(county_id)
+#   gq_randn = get_gq_chains(my_model_forecast, prior_samples_forecast_randn);
+#   CSV.write(joinpath(results_dir, "prior_generated_quantities.csv"), DataFrame(gq_randn))
+# end
 
-MAP_init = optimize_many_MAP(my_model, 100, n_chains, true)
+# MAP_init = optimize_many_MAP(my_model, 10, n_chains, true)
 Random.seed!(county_id)
-n_samples = 100
-n_chains = 4
 
-posterior_samples = sample(my_model, NUTS(), MCMCThreads(), n_samples, n_chains, init_params = MAP_init * 0.95)
+result_multi = multipathfinder(my_model, 1_000; nruns = 2)
 
+# init_params = collect.(eachrow(result_multi.draws_transformed.value[1:4, :, 1]))
+
+# n_samples = 50
+# posterior_samples = sample(my_model, NUTS(), MCMCThreads(), n_samples, n_chains, init_params = init_params)
+
+posterior_samples = result_multi.draws_transformed
 
 posterior_samples_forecast_randn = augment_chains_with_forecast_samples(Chains(posterior_samples, :parameters), my_model, my_model_forecast, "randn")
-
 indices_to_keep = .!isnothing.(generated_quantities(my_model_forecast, posterior_samples_forecast_randn));
 
 posterior_samples_forecast_randn = ChainsCustomIndex(posterior_samples_forecast_randn, indices_to_keep);
