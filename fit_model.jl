@@ -398,7 +398,7 @@ if priors_only
   CSV.write(joinpath(results_dir, "prior_generated_quantities.csv"), DataFrame(gq_randn))
 end
 
-MAP_init = optimize_many_MAP(my_model, 100, n_chains, true)
+MAP_init = optimize_many_MAP(my_model, 20, n_chains, true)
 Random.seed!(county_id)
 n_samples = 100
 n_chains = 4
