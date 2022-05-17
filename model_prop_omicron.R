@@ -5,11 +5,11 @@ library(brms)
 library(tidybayes)
 library(lubridate)
 library(scales)
-
+source("src/plot_functions.R")
 options(brms.backend = "cmdstanr",
         mc.cores=parallel::detectCores())
 
-county_variant_data <- read_csv("county_variant_data.csv") %>%
+county_variant_data <- read_csv("data/county_greek_data.csv") %>%
   pivot_longer(-c(county, date), names_to = "greek", values_to = "n") %>%
   mutate(greek = fct_other(greek, keep = "omicron", other_level = "other")) %>%
   count(county, date, greek, wt = n) %>%
@@ -67,8 +67,8 @@ ggplot(all_epred_data, aes(date, epred, group = unique_id))  +
   scale_x_date(name = "Date") +
   cowplot::theme_cowplot()
 
-
-ggplot(mapping = aes(date, epred)) +
+prop_omicron_estiamtes_county <-
+  ggplot(mapping = aes(date, epred)) +
   facet_wrap(. ~ county) +
   geom_point(data = county_variant_data_for_brms %>%
                mutate(epred = omicron / n),
@@ -79,6 +79,8 @@ ggplot(mapping = aes(date, epred)) +
   cowplot::theme_cowplot() +
   theme(legend.position = "bottom")
 
+
+save_plot_target_asp(filename = "figures/prop_omicron_estiamtes_county.pdf", plot = prop_omicron_estiamtes_county, ncol = 8, nrow = 8, base_height = 1.2, base_asp = 16/9)
 
 prop_omicron_county_dat <-
   all_epred_data %>%
