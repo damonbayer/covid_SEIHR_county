@@ -80,7 +80,7 @@ prop_omicron_estiamtes_county <-
   theme(legend.position = "bottom")
 
 
-save_plot_target_asp(filename = "figures/prop_omicron_estiamtes_county.pdf", plot = prop_omicron_estiamtes_county, ncol = 8, nrow = 8, base_height = 1.2, base_asp = 16/9)
+save_plot_target_asp(filename = "figures/prop_omicron_estiamtes_county.pdf", plot = prop_omicron_estiamtes_county.pdf, ncol = 8, nrow = 8, base_height = 1.2, base_asp = 16/9)
 
 prop_omicron_county_dat <-
   all_epred_data %>%
