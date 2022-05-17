@@ -347,7 +347,7 @@ prob1 = ODEProblem(seir_ode_log!,
   )
 end;
 
-n_samples = 2000
+n_samples = 100
 n_chains = 4
 
 my_model = bayes_seihr(
@@ -408,9 +408,9 @@ end
 n_samples = 2000
 n_chains = 4
 
-MAP_init = optimize_many_MAP(my_model_simulated, 10, 1, true)[1]
+MAP_init = optimize_many_MAP(my_model, 10, 1, true)[1]
 
-Random.seed!(seed)
+Random.seed!(county_id)
 MAP_noise = [randn(length(MAP_init)) for x in 1:n_chains]
 
 alg = Gibbs(NUTS(-1, 0.8, :prop_omicron_only_init_non_centered, :dur_latent_non_centered_non_omicron, :dur_infectious_non_centered_non_omicron, :IHR_non_centered_non_omicron, :dur_hospitalized_non_centered_non_omicron, :dur_waning_non_centered_omicron, :E_init_non_centered_non_omicron, :I_init_non_centered_non_omicron, :case_detection_rate_non_centered_other, :dur_latent_non_centered_omicron, :dur_infectious_non_centered_omicron, :IHR_non_centered_omicron, :dur_hospitalized_non_centered_omicron, :E_init_non_centered_omicron, :I_init_non_centered_omicron, :case_detection_rate_non_centered_omicron, :ϕ_cases_non_centered, :ϕ_hospitalizations_non_centered),
