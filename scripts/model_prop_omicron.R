@@ -67,7 +67,7 @@ ggplot(all_epred_data, aes(date, epred, group = unique_id))  +
   scale_x_date(name = "Date") +
   cowplot::theme_cowplot()
 
-prop_omicron_estiamtes_county <-
+prop_omicron_estimates_county <-
   ggplot(mapping = aes(date, epred)) +
   facet_wrap(. ~ county) +
   geom_point(data = county_variant_data_for_brms %>%
@@ -80,7 +80,7 @@ prop_omicron_estiamtes_county <-
   theme(legend.position = "bottom")
 
 
-save_plot_target_asp(filename = "figures/prop_omicron_estiamtes_county.pdf", plot = prop_omicron_estiamtes_county.pdf, ncol = 8, nrow = 8, base_height = 1.2, base_asp = 16/9)
+save_plot_target_asp(filename = "figures/prop_omicron_estimates_county.pdf", plot = prop_omicron_estimates_county.pdf, ncol = 8, nrow = 8, base_height = 1.2, base_asp = 16/9)
 
 prop_omicron_county_dat <-
   all_epred_data %>%
