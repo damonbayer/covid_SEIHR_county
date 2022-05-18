@@ -15,8 +15,8 @@ module purge
 module load julia-lts
 cd //dfs6/pub/bayerd/covid_SEIHR_county
 
-if [ $SLURM_ARRAY_TASK_ID == 1 ]; then
-sbatch --depend=afterany:$SLURM_ARRAY_JOB_ID slurm_submissions/update_projections_3.sh
-fi
+#if [ $SLURM_ARRAY_TASK_ID == 1 ]; then
+#sbatch --depend=afterany:$SLURM_ARRAY_JOB_ID slurm_submissions/update_projections_3.sh
+#fi
 
 julia --project --threads 4 scripts/fit_model_waning.jl $SLURM_ARRAY_TASK_ID
