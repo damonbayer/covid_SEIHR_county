@@ -77,7 +77,7 @@ posterior_predictive_summary_CA <-
             .groups = "drop") %>%
   select(-c(iteration, chain)) %>%
   group_by(name, time) %>%
-  median_qi(.width = ci_widths) %>%
+  median_qi(.width = c(ci_widths, 0.9)) %>%
   left_join(time_date_key) %>%
   mutate(county = "California") %>%
   select(county, date, name, everything(), -time) %>%
@@ -100,6 +100,6 @@ posterior_predictive_LEMMA_format <-
   select(date, county, quantile, hosp_census_with_covid = hospitalizations, cases)
 
 write_csv(posterior_predictive_LEMMA_format, "posterior_predictive_LEMMA_format.csv")
-write_csv(posterior_predictive_summary_CA, "results/posterior_predictive_summary_CA.csv")
+write_csv(posterior_predictive_summary_CA %>% filter(.width != 0.9), "results/posterior_predictive_summary_CA.csv")
 write_csv(posterior_predictive_summary_regions, "results/posterior_predictive_summary_regions.csv")
 write_csv(posterior_predictive_summary_counties %>% filter(.width != 0.9), "results/posterior_predictive_summary_counties.csv")

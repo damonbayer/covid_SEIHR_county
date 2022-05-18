@@ -1,5 +1,6 @@
 library(tidyverse)
 library(gridExtra)
+source("src/plot_functions.R")
 
 raw_dat <- read_csv("data/cases_hospitalizations_by_county.csv") %>%
   rename(new_cases = cases)
@@ -61,13 +62,11 @@ make_post_pred_plot <- function(target_place_name) {
     geom_lineribbon(data = tmp_posterior_predictive_intervals,
                     mapping = aes(ymin = .lower, ymax = .upper)) +
     geom_point(data = tmp_dat_tidy) +
-    scale_fill_brewer(name = "Credible Interval Width") +
     scale_y_continuous(name = "Count", labels = comma) +
     scale_x_date(name = "Date") +
     ggtitle(str_c(target_place_name, target_place_type, sep = " ") %>% str_to_title(),
             subtitle = str_c("Forecasted ", max(dat_tidy$date))) +
-    cowplot::theme_minimal_grid() +
-    theme(legend.position = "bottom")
+    my_theme
 }
 
 
