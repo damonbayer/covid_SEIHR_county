@@ -80,7 +80,7 @@ prop_omicron_estiamtes_county <-
   theme(legend.position = "bottom")
 
 
-save_plot_target_asp(filename = "figures/prop_omicron_estiamtes_county.pdf", plot = prop_omicron_estiamtes_county, ncol = 8, nrow = 8, base_height = 1.2, base_asp = 16/9)
+save_plot_target_asp(filename = "figures/prop_omicron_estimates_county.pdf", plot = prop_omicron_estiamtes_county, ncol = 8, nrow = 8, base_height = 1.2, base_asp = 16/9)
 
 prop_omicron_county_dat <-
   all_epred_data %>%
@@ -94,3 +94,26 @@ prop_omicron_county_dat <-
 
 
 write_csv(prop_omicron_county_dat, "data/prop_omicron_county_dat.csv")
+
+target_counties <- c("Los Angeles", "San Francisco", "Sacramento")
+prop_omicron_estiamtes_target_counties <-
+  ggplot(mapping = aes(date, epred)) +
+  facet_wrap(. ~ county) +
+  geom_point(data = county_variant_data_for_brms %>%
+               filter(county %in% target_counties) %>%
+               mutate(epred = omicron / n),
+             mapping = aes(size = n),
+             alpha = 0.5) +
+  geom_line(data = all_epred_data %>%
+              filter(model == "random intercept") %>%
+              filter(county %in% target_counties),
+            color = "blue") +
+  scale_y_continuous(name = "Proportion Omicron", labels = percent) +
+  scale_x_date(name = "Date") +
+  scale_size_continuous(name = "# Sequences", labels = comma) +
+  cowplot::theme_cowplot() +
+  theme(legend.position = "bottom") +
+  ggtitle("Introduction of Omicron in CA Counties")
+
+
+save_plot_target_asp(filename = "figures/prop_omicron_estiamtes_target_counties.pdf", plot = prop_omicron_estiamtes_target_counties, ncol = 3, base_height = 6, base_asp = 16/9)

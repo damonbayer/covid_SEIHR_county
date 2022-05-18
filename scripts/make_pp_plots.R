@@ -78,3 +78,71 @@ ggsave2(filename = "figures/pp_plots.pdf",
           marrangeGrob(ncol = 1, nrow = 1),
         width = 12,
         height = 8)
+
+target_counties <- c("Los Angeles", "San Francisco", "Sacramento")
+
+hosp_forecast_target_counties <-
+  ggplot(mapping = aes(date, value)) +
+  facet_wrap(. ~ place_name,
+             scales = "free_y") +
+    geom_lineribbon(data = all_pp_summaries %>%
+                      filter(place_name %in% target_counties) %>%
+                      filter(name == "hospitalizations"),
+                    mapping = aes(ymin = .lower, ymax = .upper)) +
+    geom_point(data = dat_tidy %>%
+                 filter(place_name %in% target_counties) %>%
+                 filter(name == "hospitalizations")) +
+    scale_y_continuous(name = "Count", labels = comma) +
+    scale_x_date(name = "Date") +
+    ggtitle(str_c("County", "Hospitalizations", sep = " ") %>% str_to_title(),
+            subtitle = str_c("Forecasted ", max(dat_tidy$date))) +
+    my_theme
+
+hosp_forecast_target_regions <-
+  ggplot(mapping = aes(date, value)) +
+  facet_wrap(. ~ place_name,
+             scales = "free_y") +
+  geom_lineribbon(data = all_pp_summaries %>%
+                    filter(place_type == "Region") %>%
+                    filter(name == "hospitalizations"),
+                  mapping = aes(ymin = .lower, ymax = .upper)) +
+  geom_point(data = dat_tidy %>%
+               filter(place_type == "region") %>%
+               filter(name == "hospitalizations")) +
+  scale_y_continuous(name = "Count", labels = comma) +
+  scale_x_date(name = "Date") +
+  ggtitle(str_c("Regional", "Hospitalizations", sep = " ") %>% str_to_title(),
+          subtitle = str_c("Forecasted ", max(dat_tidy$date))) +
+  my_theme
+
+
+hosp_forecast_target_state <-
+  ggplot(mapping = aes(date, value)) +
+
+  geom_lineribbon(data = all_pp_summaries %>%
+                    filter(place_type == "State") %>%
+                    filter(name == "hospitalizations"),
+                  mapping = aes(ymin = .lower, ymax = .upper)) +
+  geom_point(data = dat_tidy %>%
+               filter(place_type == "state") %>%
+               filter(name == "hospitalizations")) +
+  scale_y_continuous(name = "Count", labels = comma) +
+  scale_x_date(name = "Date") +
+  ggtitle(str_c("State", "Hospitalizations", sep = " ") %>% str_to_title(),
+          subtitle = str_c("Forecasted ", max(dat_tidy$date))) +
+  my_theme
+
+
+save_plot_target_asp(filename = "figures/hosp_forecast_target_counties.pdf",
+                     plot = hosp_forecast_target_counties,
+                     ncol = 3,
+                     base_asp = 16/9, base_height = 6)
+
+save_plot_target_asp(filename = "figures/hosp_forecast_target_regions.pdf",
+                     plot = hosp_forecast_target_regions,
+                     ncol = 3, nrow = 2,
+                     base_asp = 16/9, base_height = 3)
+
+save_plot_target_asp(filename = "figures/hosp_forecast_target_state.pdf",
+                     plot = hosp_forecast_target_state,
+                     base_asp = 16/9, base_height = 4)
