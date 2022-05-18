@@ -95,7 +95,7 @@ posterior_predictive_LEMMA_format <-
              value_type == "value" ~ 0.5,
              value_type == ".upper" ~ 0.95)) %>%
   select(county, date, quantile, name, value) %>%
-  pivot_wider(names_from = name, values_from = value) %>%
+  pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
   mutate(cases = est_omicron_cases + est_other_cases) %>%
   select(date, county, quantile, hosp_census_with_covid = hospitalizations, cases)
 
