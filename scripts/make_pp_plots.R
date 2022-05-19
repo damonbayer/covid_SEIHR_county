@@ -72,6 +72,8 @@ make_post_pred_plot <- function(target_place_name) {
 
 ggsave2(filename = "figures/pp_plots.pdf",
         plot = dat_tidy %>%
+          mutate(place_type = fct_relevel(place_type, "state", "region", "county")) %>%
+          arrange(place_type, place_name) %>%
           pull(place_name) %>%
           unique() %>%
           map(make_post_pred_plot) %>%
