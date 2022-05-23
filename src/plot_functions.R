@@ -1,5 +1,6 @@
 library(ggplot2)
 library(scales)
+library(cowplot)
 theme_set(cowplot::theme_minimal_grid())
 save_plot_target_asp <- function (filename, plot, ncol = 1, nrow = 1, base_height = 3.71,
                                   base_asp = 1730/650, base_width = NULL) {
