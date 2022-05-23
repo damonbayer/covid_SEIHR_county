@@ -64,7 +64,7 @@ cases <-
 hosp <-
   read_csv(hosp_url) %>%
   mutate(todays_date = lubridate::ymd(todays_date),
-         hospitalized_covid_patients = as.integer(hospitalized_covid_patients),
+         hospitalized_covid_patients = as.integer(hospitalized_covid_confirmed_patients),
          icu_covid_confirmed_patients = as.integer(icu_covid_confirmed_patients),
          icu_suspected_covid_patients = as.integer(icu_suspected_covid_patients)) %>%
   mutate(icu_covid_patients =
