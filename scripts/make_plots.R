@@ -1,5 +1,6 @@
 library(tidyverse)
 library(gridExtra)
+library(tidybayes)
 source("src/plot_functions.R")
 
 raw_dat <- read_csv("data/cases_hospitalizations_by_county.csv") %>%

@@ -1,4 +1,5 @@
 library(tidyverse)
+library(tidybayes)
 library(fs)
 
 ci_widths <- c(0.5, 0.8, 0.95)

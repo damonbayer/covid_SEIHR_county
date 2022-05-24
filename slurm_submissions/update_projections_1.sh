@@ -6,7 +6,7 @@
 #SBATCH -n 1          ## request 4 tasks (4 CPUs)
 #SBATCH -t 00:15:00   ## 15 min run time limit
 #SBATCH --mem=5G 
-#SBATCH -o julia-%A-%a.out
+#SBATCH -o update_projections_1-%A-%a.out
 #SBATCH --mail-type=begin,end
 #SBATCH --mail-user=bayerd@uci.edu
 
@@ -14,6 +14,6 @@ module purge
 module load R
 cd //dfs6/pub/bayerd/covid_SEIHR_county
 
-Rscript cases_hospitalizations_by_county.R
+Rscript scripts/pull_case_hospitalizations_data.R
 
 sbatch --dependency=afterany:$SLURM_JOB_ID update_projections_2.sh

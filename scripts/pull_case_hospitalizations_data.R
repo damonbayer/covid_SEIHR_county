@@ -10,9 +10,15 @@ if (Sys.info()[["sysname"]] == "Linux") {
   results_dir <- "results"
 }
 
-case_reporting_delay_ecdf <- read_rds("case_reporting_delay_ecdf.rds")
+case_reporting_delay_ecdf <- read_rds("data/case_reporting_delay_ecdf.rds")
 
-prop_omicron_county_dat <- read_csv("data/prop_omicron_county_dat.csv")
+prop_omicron_county_dat <-
+  read_csv("data/prop_omicron_county_dat.csv") %>%
+  # Repeat last prop if data isn't updated
+  bind_rows(., crossing(group_by(., county) %>%
+                          filter(date == max(date)) %>%
+                          select(-date),
+                        date = seq(max(.$date) + 1, today(), 1)))
 
 # variants_dat <- read_tsv("https://raw.githubusercontent.com/blab/rt-from-frequency-dynamics/master/data/omicron-us/omicron-us_location-variant-sequence-counts.tsv") %>%
 #   filter(location == "California") %>%
