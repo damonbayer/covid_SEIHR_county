@@ -117,18 +117,6 @@ ggsave2(filename = "figures/pp_plots.pdf",
         width = 12,
         height = 8)
 
-
-ggsave2(filename = "figures/pp_plots.pdf",
-        plot = dat_tidy %>%
-          mutate(place_type = fct_relevel(place_type, "state", "region", "county")) %>%
-          arrange(place_type, place_name) %>%
-          pull(place_name) %>%
-          unique() %>%
-          map(make_post_pred_plot) %>%
-          marrangeGrob(ncol = 1, nrow = 1),
-        width = 12,
-        height = 8)
-
 ggsave2(filename = "figures/time_varying_gq_plots.pdf",
         plot = dat_tidy %>%
           filter(place_type == "county") %>%
