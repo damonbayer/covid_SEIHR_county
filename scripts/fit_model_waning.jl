@@ -562,12 +562,11 @@ alg = Gibbs(NUTS(-1, 0.8,
 ESS(:R0_params_non_centered))
 Random.seed!(county_id)
 
-test_init = zeros(51)
-# Sample with the MAP estimate as the starting point.
-chain = sample(my_model, NUTS(), MCMCThreads(), n_samples, n_chains, init_params = test_init)
+# testing with just using zeros, doesn't work
+# test_init = zeros(51)
+# chain = sample(my_model, NUTS(), MCMCThreads(), n_samples, n_chains, init_params = test_init)
 
-# posterior_samples = sample(my_model, alg, MCMCThreads(), n_samples, n_chains, init_params = repeat([MAP_init], n_chains) .* collect(range(0.92, stop = 0.98, length = n_chains)))
-posterior_samples = sample(my_model, alg, MCMCThreads(), n_samples, n_chains)
+posterior_samples = sample(my_model, alg, MCMCThreads(), n_samples, n_chains, init_params = repeat([MAP_init], n_chains) .* collect(range(0.92, stop = 0.98, length = n_chains)))
 
 posterior_samples_forecast_randn = augment_chains_with_forecast_samples(Chains(posterior_samples, :parameters), my_model, my_model_forecast, "randn")
 
