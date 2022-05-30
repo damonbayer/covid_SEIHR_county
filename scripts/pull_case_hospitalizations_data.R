@@ -74,18 +74,21 @@ hosp <-
          icu_covid_confirmed_patients = as.integer(icu_covid_confirmed_patients),
          icu_suspected_covid_patients = as.integer(icu_suspected_covid_patients)) %>%
   mutate(icu_covid_patients =
-           if_else(is.na(icu_covid_confirmed_patients), 0L, icu_covid_confirmed_patients) +
-           if_else(is.na(icu_suspected_covid_patients), 0L, icu_suspected_covid_patients)) %>%
+           if_else(is.na(icu_covid_confirmed_patients), 0L, icu_covid_confirmed_patients)) %>%
   select(date = todays_date,
          hospitalized_covid_patients,
          icu_covid_patients,
-         county)
+         county) %>%
+  mutate(hospitalized_covid_patients = hospitalized_covid_patients - icu_covid_patients)
 
+check <- hosp %>% filter(hospitalized_covid_patients < 0)
+
+hosp$hospitalized_covid_patients[hosp$hospitalized_covid_patients < 0] <- 0
 
 county_pop <- read_csv("data/county_pop.csv") %>% rename_all(str_to_lower)
 
 full_dat <- full_join(cases, hosp) %>%
-  select(date, county, cases, tests, hospitalized_covid_patients)
+  select(date, county, cases, tests, hospitalized_covid_patients, icu_covid_patients, deaths)
 
 
 time_interval_in_days <- 7
@@ -110,7 +113,8 @@ dat <-
   mutate(days_ago = as.numeric(latest_date - date)) %>%
   mutate(est_prop_reported = case_reporting_delay_ecdf(days_ago)) %>%
   mutate(est_cases = round(cases / est_prop_reported),
-         est_tests = round(tests / est_prop_reported)) %>%
+         est_tests = round(tests / est_prop_reported),
+         est_deaths = round(deaths/ est_prop_reported)) %>%
   # mutate(.,
   #        prop_omicron_cases = predict(prop_omicron_model,
   #                                     newdata = .,
@@ -133,6 +137,8 @@ dat <-
             est_omicron_tests = round(sum(est_omicron_tests)),
             est_other_tests = round(sum(est_other_tests)),
             hospitalizations = last(hospitalized_covid_patients),
+            deaths = sum(deaths),
+            icu = last(icu_covid_patients),
             .groups = "drop") %>%
   select(-lump) %>%
   mutate(est_tests = if_else(est_other_tests == 0, est_tests + 1, est_tests),
@@ -157,7 +163,8 @@ initialization_values <-
   summarize(est_cases = sum(est_cases),
             est_omicorn_cases = sum(est_omicron_cases),
             est_other_cases = sum(est_other_cases),
-            hospitalizations = last(hospitalized_covid_patients)) %>%
+            hospitalizations = last(hospitalized_covid_patients),
+            icu = last(icu_covid_patients)) %>%
   pivot_longer(-county) %>%
   mutate(value = if_else(value == 0, 1, value)) %>%
   pivot_wider(county)
