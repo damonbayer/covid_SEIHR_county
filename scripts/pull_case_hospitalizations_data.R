@@ -138,6 +138,7 @@ dat <-
             est_other_tests = round(sum(est_other_tests)),
             hospitalizations = last(hospitalized_covid_patients),
             deaths = sum(deaths),
+            est_deaths = sum(est_deaths),
             icu = last(icu_covid_patients),
             .groups = "drop") %>%
   select(-lump) %>%

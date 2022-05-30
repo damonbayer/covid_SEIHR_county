@@ -17,7 +17,7 @@ using covid_SEIHR_county
 
 county_id =
     if length(ARGS) == 0
-        52
+        1
     else
       parse(Int64, ARGS[1])
     end
@@ -241,7 +241,7 @@ prob1 = ODEProblem(seir_ode_log!,
   dur_hospitalized_non_centered_omicron ~ Normal()
   dur_icu_non_centered_omicron ~ Normal()
   HICUR_non_centered_omicron ~ Normal()
-  ICUDR_non_centered_omicron ~ Noraml()
+  ICUDR_non_centered_omicron ~ Normal()
   dur_waning_non_centered_omicron ~ Normal()
 
   E_init_non_centered_omicron ~ Normal()
@@ -252,6 +252,40 @@ prob1 = ODEProblem(seir_ode_log!,
   ϕ_cases_non_centered ~ Exponential()
   ϕ_hospitalizations_non_centered ~ Exponential()
   ϕ_death_non_centered ~ Exponential()
+
+  # troubleshooting 
+  # R0_params_non_centered = zeros(l+3) # +3 for sigma, non_omicron_init, omicron_init
+  # prop_omicron_only_init_non_centered = 0
+  # dur_latent_non_centered_non_omicron = 0
+  # dur_infectious_non_centered_non_omicron = 0
+  # IHR_non_centered_non_omicron = 0
+  # dur_hospitalized_non_centered_non_omicron = 0 
+  # dur_icu_non_centered_non_omicron = 0
+  # HICUR_non_centered_non_omicron = 0 
+  # ICUDR_non_centered_non_omicron = 0
+  
+  # E_init_non_centered_non_omicron = 0 
+  # I_init_non_centered_non_omicron = 0 
+  # case_detection_rate_non_centered_other = 0
+  
+  # dur_latent_non_centered_omicron = 0
+  # dur_infectious_non_centered_omicron = 0
+  # IHR_non_centered_omicron = 0
+  # dur_hospitalized_non_centered_omicron = 0
+  # dur_icu_non_centered_omicron = 0
+  # HICUR_non_centered_omicron = 0
+  # ICUDR_non_centered_omicron = 0
+  # dur_waning_non_centered_omicron = 0
+
+  # E_init_non_centered_omicron = 0
+  # I_init_non_centered_omicron = 0
+
+  # case_detection_rate_non_centered_omicron  = 0
+
+  # ϕ_cases_non_centered = 1 
+  # ϕ_hospitalizations_non_centered  = 1
+  # ϕ_death_non_centered = 1
+
 
   # Transformations
   R₀_init_non_centered_non_omicron = R0_params_non_centered[1]
@@ -298,14 +332,14 @@ prob1 = ODEProblem(seir_ode_log!,
 
   ω_non_omicron = 1/dur_icu_non_omicron
 
-  dur_icu_omicron = exp(dur_icu_non_centered_omicron * 0.1 + log(1))
+  dur_icu_omicron = exp(dur_icu_non_centered_omicron * 0.1 + log(0.31))
   ω_omicron = 1/dur_icu_omicron
 
-  HICUR_non_omicron = logistic(HICUR_non_centered_non_omicron * 0.2 - 3.2)
-  HICUR_omicron = logistic(HICUR_non_centered_omicron * 0.2 - 3.2)
+  HICUR_non_omicron = logistic(HICUR_non_centered_non_omicron * 0.2 - 1.32)
+  HICUR_omicron = logistic(HICUR_non_centered_omicron * 0.2 - 1.69)
 
-  ICUDR_non_omicron = logistic(ICUDR_non_centered_non_omicron * 0.2 - 3.2)
-  ICUDR_omicron = logistict(ICUDR_non_centered_omicron * 0.2 -3.2)
+  ICUDR_non_omicron = logistic(ICUDR_non_centered_non_omicron * 0.2 - 1.10)
+  ICUDR_omicron = logistic(ICUDR_non_centered_omicron * 0.2 - 1.59)
 
   ϕ_cases = ϕ_cases_non_centered^(-2)
   ϕ_hospitalizations = ϕ_hospitalizations_non_centered^(-2)
@@ -346,6 +380,7 @@ prob1 = ODEProblem(seir_ode_log!,
   
   param_callback = PresetTimeCallback(param_change_times, param_affect_β!, save_positions = (false, false))
 
+  # extra_ode_precision = false
   if extra_ode_precision
     sol = solve(prob, Tsit5(), callback = param_callback, saveat = obstimes, save_start = true, verbose = false, abstol = 1e-11, reltol = 1e-8)
   else
@@ -395,6 +430,12 @@ prob1 = ODEProblem(seir_ode_log!,
     dur_hospitalized_non_omicron_days = dur_hospitalized_non_omicron * 7,
     dur_hospitalized_omicron_days = dur_hospitalized_omicron * 7,
     dur_waning_omicron_days = dur_waning_omicron * 7,
+    dur_icu_non_omicron_days = dur_icu_non_omicron * 7,
+    dur_icu_omicron_days = dur_icu_omicron * 7,
+    HICUR_non_omicron = HICUR_non_omicron,
+    HICUR_omicron = HICUR_omicron,
+    ICUDR_non_omicron = ICUDR_non_omicron,
+    ICUDR_omicron = ICUDR_omicron,
     ϕ_cases = ϕ_cases,
     ϕ_hospitalizations = ϕ_hospitalizations,
     β_t_non_omicron = vcat(β_init_non_omicron, β_t_values_no_init_non_omicron),
@@ -412,16 +453,22 @@ prob1 = ODEProblem(seir_ode_log!,
     R = sol_reg_scale_array[9, :],
     C_non_omicron = sol_reg_scale_array[10, :],
     C_omicron = sol_reg_scale_array[11, :],
+    ICU_non_omicron = sol_reg_scale_array[12, :],
+    ICU_omicron = sol_reg_scale_array[13, :] ,
+    D_non_omicron = sol_reg_scale_array[14, :],
+    D_omicron = sol_reg_scale_array[15, :],
     sol_new_cases_other = sol_new_cases_other,
     sol_new_cases_omicron = sol_new_cases_omicron,
     sol_hospitalizations = sol_hospitalizations,
     other_cases_mean = other_cases_mean,
     omicron_cases_mean = omicron_cases_mean,
-    hospitalizations_mean = hospitalizations_mean
+    hospitalizations_mean = hospitalizations_mean,
+    icu_mean = icu_mean,
+    death_mean = death_mean
   )
 end;
 
-n_samples = 2000
+n_samples = 100
 n_chains = 4
 
 my_model = bayes_seihr(
@@ -456,7 +503,7 @@ my_model_forecast_missing = bayes_seihr(
   missing_hospitalizations_forecast,
   data_est_other_tests_forecast,
   data_est_omicron_tests_forecast,
-  missing_icu, missing_est_death,
+  missing_icu_forecast, missing_est_death_forecast,
   obstimes_forecast,
   param_change_times_forecast,
   true,
@@ -484,16 +531,43 @@ if priors_only
   CSV.write(joinpath(results_dir, "prior_generated_quantities.csv"), DataFrame(gq_randn))
 end
 
-n_samples = 2000
-n_chains = 4
-
 MAP_init = optimize_many_MAP(my_model, 10, 1, true)[1]
 
-alg = Gibbs(NUTS(-1, 0.8, :prop_omicron_only_init_non_centered, :dur_latent_non_centered_non_omicron, :dur_infectious_non_centered_non_omicron, :IHR_non_centered_non_omicron, :dur_hospitalized_non_centered_non_omicron, :dur_waning_non_centered_omicron, :E_init_non_centered_non_omicron, :I_init_non_centered_non_omicron, :case_detection_rate_non_centered_other, :dur_latent_non_centered_omicron, :dur_infectious_non_centered_omicron, :IHR_non_centered_omicron, :dur_hospitalized_non_centered_omicron, :E_init_non_centered_omicron, :I_init_non_centered_omicron, :case_detection_rate_non_centered_omicron, :ϕ_cases_non_centered, :ϕ_hospitalizations_non_centered,
-:ϕ_death, :dur_icu_omicron, :dur_icu_non_omicron, :HICUR_non_omicron, :HICUR_omicron, :ICUD_non_omicron, :ICUD_omicron),
+alg = Gibbs(NUTS(-1, 0.8, 
+:prop_omicron_only_init_non_centered, 
+:dur_latent_non_centered_non_omicron, 
+:dur_infectious_non_centered_non_omicron, 
+:IHR_non_centered_non_omicron, 
+:dur_hospitalized_non_centered_non_omicron, 
+:dur_waning_non_centered_omicron, 
+:E_init_non_centered_non_omicron, 
+:I_init_non_centered_non_omicron, 
+:case_detection_rate_non_centered_other, 
+:dur_latent_non_centered_omicron, 
+:dur_infectious_non_centered_omicron, 
+:IHR_non_centered_omicron, 
+:dur_hospitalized_non_centered_omicron, 
+:E_init_non_centered_omicron, 
+:I_init_non_centered_omicron, 
+:case_detection_rate_non_centered_omicron, 
+:ϕ_cases_non_centered, 
+:ϕ_hospitalizations_non_centered,
+:ϕ_death, 
+:dur_icu_omicron, 
+:dur_icu_non_omicron, 
+:HICUR_non_omicron, 
+:HICUR_omicron, 
+:ICUD_non_omicron, 
+:ICUD_omicron),
 ESS(:R0_params_non_centered))
 Random.seed!(county_id)
-posterior_samples = sample(my_model, alg, MCMCThreads(), n_samples, n_chains, init_params = repeat([MAP_init], n_chains) .* collect(range(0.92, stop = 0.98, length = n_chains)))
+
+test_init = zeros(51)
+# Sample with the MAP estimate as the starting point.
+chain = sample(my_model, NUTS(), MCMCThreads(), n_samples, n_chains, init_params = test_init)
+
+# posterior_samples = sample(my_model, alg, MCMCThreads(), n_samples, n_chains, init_params = repeat([MAP_init], n_chains) .* collect(range(0.92, stop = 0.98, length = n_chains)))
+posterior_samples = sample(my_model, alg, MCMCThreads(), n_samples, n_chains)
 
 posterior_samples_forecast_randn = augment_chains_with_forecast_samples(Chains(posterior_samples, :parameters), my_model, my_model_forecast, "randn")
 
