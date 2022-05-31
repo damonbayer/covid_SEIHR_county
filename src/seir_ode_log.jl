@@ -39,7 +39,7 @@ function seir_ode_log!(du, u, p, t)
       du[6] = (progression_omicron - (hospitalization_omicron + non_hospitalized_recovery_omicron)) / I_omicron # I_omicron
       du[7] = (hospitalization_non_omicron - hospitalized_recovery_non_omicron) / H_non_omicron # H_non_omicron
       du[8] = (hospitalization_omicron - hospitalized_recovery_omicron) / H_omicron # H_omicron
-      du[9] = (non_hospitalized_recovery_non_omicron + hospitalized_recovery_non_omicron + non_hospitalized_recovery_omicron + hospitalized_recovery_omicron) / R  # R
+      du[9] = ((non_hospitalized_recovery_non_omicron + hospitalized_recovery_non_omicron + non_hospitalized_recovery_omicron + hospitalized_recovery_omicron) - waning_immunity) / R  # R
       du[10] = progression_non_omicron / C_non_omicron # C_non_omicron
       du[11] = progression_omicron / C_omicron # C_omicron
     end
