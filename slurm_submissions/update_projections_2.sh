@@ -9,7 +9,7 @@
 #SBATCH -o update_projections_2-%A-%a.out
 #SBATCH --mail-type=begin,end
 #SBATCH --mail-user=bayerd@uci.edu
-#SBATCH --array=1-56
+#SBATCH --array=0-56
 
 module purge
 module load julia-lts

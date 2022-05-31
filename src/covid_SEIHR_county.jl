@@ -1,10 +1,39 @@
 module covid_SEIHR_county
+using Distributions
 using Turing
 using AxisArrays
 using MCMCChains
 using Optim
 using LineSearches
 using Random
+using DrWatson
+
+
+function NegativeBinomial2(μ, ϕ)
+  p = 1 / (1 + μ / ϕ)
+  
+  if p <= zero(p)
+    p = eps(zero(p))
+  end
+
+  if p >= one(p)
+    p = prevfloat(one(p))
+  end
+  
+  r = ϕ
+
+  if r <= zero(r)
+    r = eps(zero(r))
+  end
+
+  Distributions.NegativeBinomial(r, p)
+end
+export NegativeBinomial2
+
+# Higher ϕ ⟹ lower variance
+# var(NegativeBinomial2(100, 0.00001))
+# var(NegativeBinomial2(100, 100000))
+
 """
 get_vector_param_chain
 """

@@ -16,8 +16,8 @@ time_date_key <-
   bind_rows(tibble(time = min(.$time) - 1,
                    date = min(.$date) - time_interval_in_days),
             .,
-            tibble(time = max(.$time) + 1:4,
-                   date = max(.$date) + time_interval_in_days * (1:4)))
+            tibble(time = max(.$time) + 1:51,
+                   date = max(.$date) + time_interval_in_days * (1:51)))
 
 if (Sys.info()[["sysname"]] == "Linux") {
   results_dir <- "//dfs6/pub/bayerd/covid_SEIHR_county/results"
