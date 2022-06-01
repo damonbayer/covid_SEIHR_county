@@ -91,9 +91,9 @@ full_dat <- full_join(cases, hosp) %>%
 time_interval_in_days <- 7
 
 earliest_date_elligible_to_report <- ymd("2021-12-12")
-latest_date <- max(full_dat$date, na.rm = T) + 1
+latest_date <- max(full_dat$date, na.rm = T)
 # last_date_to_report <- latest_date - 10
-last_date_to_report <- latest_date - 3
+last_date_to_report <- latest_date - 2
 first_date_to_report <-  earliest_date_elligible_to_report + (as.numeric(last_date_to_report - earliest_date_elligible_to_report) %% time_interval_in_days) + 1
 
 # prop_omicron_model <- glm(prop_omicron ~ bs(date), data = variants_dat %>% head(-7), family = gaussian(link = "logit"))
