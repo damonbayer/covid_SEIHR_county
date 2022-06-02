@@ -27,16 +27,8 @@ if priors_only
   county_id = 29
 end
 
-if Sys.isapple() | Sys.iswindows()
-  results_dir = "results/"
-else
-  results_dir = "//dfs6/pub/bayerd/covid_SEIHR_county/results/"
-end
-
-mkpath(results_dir)
-mkpath(joinpath(results_dir, "posterior_predictive"))
-mkpath(joinpath(results_dir, "generated_quantities"))
-mkpath(joinpath(results_dir, "posterior_samples"))
+mkpath(resultsdir())
+mkpath(resultsdir("posterior_samples"))
 
 savename_dict = Dict(:county_id => county_id)
 
@@ -49,12 +41,12 @@ time_interval_in_days = 7
 include(projectdir("src/load_process_data.jl"))
 
 ## Define Priors
+include(projectdir("src/prior_constants.jl"))
 
 ## Define ODE
 include(projectdir("src/seir_ode_log.jl"))
 
 ## Load Model
-include(projectdir("src/prior_constants.jl"))
 include(projectdir("src/bayes_seihr_waning.jl"))
 
 my_model = bayes_seihr(
@@ -73,7 +65,7 @@ my_model = bayes_seihr(
 if priors_only
   Random.seed!(county_id)
   prior_samples = sample(my_model, Prior(), MCMCThreads(), n_samples, n_chains)
-  wsave(joinpath(results_dir, "prior_samples.jld2"), @dict prior_samples)
+  wsave(resultsdir("prior_samples.jld2"), @dict prior_samples)
   exit()
 end
 
@@ -86,5 +78,4 @@ ESS(:R0_params_non_centered))
 Random.seed!(county_id)
 posterior_samples = sample(my_model, alg, MCMCThreads(), n_samples, n_chains, init_params = repeat([MAP_init], n_chains) .* collect(range(0.92, stop = 0.98, length = n_chains)))
 
-mkpath(resultsdir("posterior_samples"))
-wsave(joinpath(results_dir, "posterior_samples", savename("posterior_samples", savename_dict, "jld2")), @dict posterior_samples)
+wsave(resultsdir("posterior_samples", savename("posterior_samples", savename_dict, "jld2")), @dict posterior_samples)

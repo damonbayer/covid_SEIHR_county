@@ -19,11 +19,7 @@ time_date_key <-
             tibble(time = max(.$time) + 1:51,
                    date = max(.$date) + time_interval_in_days * (1:51)))
 
-if (Sys.info()[["sysname"]] == "Linux") {
-  results_dir <- "//dfs6/pub/bayerd/covid_SEIHR_county/results"
-} else if (Sys.info()[["sysname"]] == "Darwin") {
-  results_dir <- "results"
-}
+results_dir <- "results"
 
 time_interval_in_days <- 7
 

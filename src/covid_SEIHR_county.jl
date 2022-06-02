@@ -264,4 +264,7 @@ function optimize_many_MAP(model, n_reps = 100, top_n = 1, verbose = true)
 end
 export optimize_many_MAP
 
+resultsdir(args...) = projectdir("results", args...)
+export resultsdir
+
 end # module

@@ -27,14 +27,8 @@ if priors_only
   county_id = 29
 end
 
-if Sys.isapple() | Sys.iswindows()
-  results_dir = "results/"
-else
-  results_dir = "//dfs6/pub/bayerd/covid_SEIHR_county/results/"
-end
-
-mkpath(joinpath(results_dir, "generated_quantities"))
-mkpath(joinpath(results_dir, "posterior_samples"))
+mkpath(resultsdir("generated_quantities"))
+mkpath(resultsdir("posterior_samples"))
 
 savename_dict = Dict(:county_id => county_id)
 
@@ -87,33 +81,33 @@ my_model_forecast_missing = bayes_seihr(
   end_other_cases_time)
 
 if priors_only
-    prior_samples = load(joinpath(results_dir, "prior_samples.jld2"))["prior_samples"]
+    prior_samples = load(resultsdir("prior_samples.jld2"))["prior_samples"]
     
     Random.seed!(county_id)
-    prior_samples_forecast_randn = augment_chains_with_forecast_samples(Chains(prior_samples, :parameters), my_model, my_model_forecast, "randn")
-    prior_indices_to_keep = .!isnothing.(generated_quantities(my_model_forecast, prior_samples_forecast_randn));
+    prior_samples_forecast_zeros = augment_chains_with_forecast_samples(Chains(prior_samples, :parameters), my_model, my_model_forecast, "zeros")
+    prior_indices_to_keep = .!isnothing.(generated_quantities(my_model_forecast, prior_samples_forecast_zeros));
     
     Random.seed!(county_id)
-    prior_predictive_randn = predict(my_model_forecast_missing, prior_samples_forecast_randn)
-    CSV.write(joinpath(results_dir, "prior_predictive.csv"), DataFrame(prior_predictive_randn))
+    prior_predictive_zeros = predict(my_model_forecast_missing, prior_samples_forecast_zeros)
+    CSV.write(resultsdir("prior_predictive.csv"), DataFrame(prior_predictive_zeros))
     
     Random.seed!(county_id)
-    gq_randn = get_gq_chains(my_model_forecast, prior_samples_forecast_randn);
-    CSV.write(joinpath(results_dir, "prior_generated_quantities.csv"), DataFrame(gq_randn))
+    gq_zeros = get_gq_chains(my_model_forecast, prior_samples_forecast_zeros);
+    CSV.write(resultsdir("prior_generated_quantities.csv"), DataFrame(gq_zeros))
     exit()
 end
 
-posterior_samples = load(joinpath(results_dir, "posterior_samples", savename("posterior_samples", savename_dict, "jld2")))["posterior_samples"]
+posterior_samples = load(resultsdir("posterior_samples", savename("posterior_samples", savename_dict, "jld2")))["posterior_samples"]
 
 Random.seed!(county_id)
-posterior_samples_forecast_randn = augment_chains_with_forecast_samples(Chains(posterior_samples, :parameters), my_model, my_model_forecast, "randn")
-indices_to_keep = .!isnothing.(generated_quantities(my_model_forecast, posterior_samples_forecast_randn));
-posterior_samples_forecast_randn = ChainsCustomIndex(posterior_samples_forecast_randn, indices_to_keep);
+posterior_samples_forecast_zeros = augment_chains_with_forecast_samples(Chains(posterior_samples, :parameters), my_model, my_model_forecast, "zeros")
+indices_to_keep = .!isnothing.(generated_quantities(my_model_forecast, posterior_samples_forecast_zeros));
+posterior_samples_forecast_zeros = ChainsCustomIndex(posterior_samples_forecast_zeros, indices_to_keep);
 
 Random.seed!(county_id)
-predictive_randn = predict(my_model_forecast_missing, posterior_samples_forecast_randn)
-CSV.write(joinpath(results_dir, "posterior_predictive", savename("posterior_predictive", savename_dict, "csv")), DataFrame(predictive_randn))
+predictive_zeros = predict(my_model_forecast_missing, posterior_samples_forecast_zeros)
+CSV.write(resultsdir("posterior_predictive", savename("posterior_predictive", savename_dict, "csv")), DataFrame(predictive_zeros))
 
 Random.seed!(county_id)
-gq_randn = get_gq_chains(my_model_forecast, posterior_samples_forecast_randn);
-CSV.write(joinpath(results_dir, "generated_quantities", savename("generated_quantities", savename_dict, "csv")), DataFrame(gq_randn))
+gq_zeros = get_gq_chains(my_model_forecast, posterior_samples_forecast_zeros);
+CSV.write(resultsdir("generated_quantities", savename("generated_quantities", savename_dict, "csv")), DataFrame(gq_zeros))

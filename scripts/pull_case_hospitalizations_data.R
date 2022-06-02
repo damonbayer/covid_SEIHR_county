@@ -4,11 +4,7 @@ library(lubridate)
 library(splines)
 library(fs)
 
-if (Sys.info()[["sysname"]] == "Linux") {
-  results_dir <- "//dfs6/pub/bayerd/covid_SEIHR_county/results"
-} else if (Sys.info()[["sysname"]] == "Darwin") {
-  results_dir <- "results"
-}
+results_dir <- "results"
 
 case_reporting_delay_ecdf <- read_rds("data/case_reporting_delay_ecdf.rds")
 
