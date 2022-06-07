@@ -66,7 +66,9 @@ make_post_pred_plot <- function(target_place_name) {
                labeller = as_labeller(
                  c(hospitalizations = "Concurrent Hospitalizations",
                    est_omicron_cases = "Reported Omicron Cases (7 day bins)",
-                   est_other_cases = "Reported Other Cases (7 day bins)"))) +
+                   est_other_cases = "Reported Other Cases (7 day bins)",
+                   icu = "Concurrent ICU",
+                   est_death = "Reported Deaths"))) +
     geom_lineribbon(data = tmp_posterior_predictive_intervals,
                     mapping = aes(ymin = .lower, ymax = .upper)) +
     geom_point(data = tmp_dat_tidy) +

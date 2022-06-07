@@ -54,7 +54,9 @@ my_model = bayes_seihr(
   data_est_omicron_cases,
   data_hospitalizations,
   data_est_other_tests,
-  data_est_omicron_tests,
+  data_est_omicron_tests,  
+  data_icu, 
+  data_est_death,
   obstimes,
   param_change_times,
   false,
@@ -72,8 +74,35 @@ end
 
 MAP_init = optimize_many_MAP(my_model, 10, 1, true)[1]
 
-alg = Gibbs(NUTS(-1, 0.8, :prop_omicron_only_init_non_centered, :dur_latent_non_centered_non_omicron, :dur_infectious_non_centered_non_omicron, :IHR_non_centered_non_omicron, :dur_hospitalized_non_centered_non_omicron, :dur_waning_non_centered_omicron, :E_init_non_centered_non_omicron, :I_init_non_centered_non_omicron, :case_detection_rate_non_centered_other, :dur_latent_non_centered_omicron, :dur_infectious_non_centered_omicron, :IHR_non_centered_omicron, :dur_hospitalized_non_centered_omicron, :E_init_non_centered_omicron, :I_init_non_centered_omicron, :case_detection_rate_non_centered_omicron, :ϕ_cases_non_centered, :ϕ_hospitalizations_non_centered),
+alg = Gibbs(NUTS(-1, 0.8, 
+:prop_omicron_only_init_non_centered,
+:dur_latent_non_centered_non_omicron,
+:dur_infectious_non_centered_non_omicron,
+:IHR_non_centered_non_omicron,
+:dur_hospitalized_non_centered_non_omicron,
+:dur_icu_non_centered_non_omicron,
+:HICUR_non_centered_non_omicron,
+:ICUDR_non_centered_non_omicron,
+:E_init_non_centered_non_omicron,
+:I_init_non_centered_non_omicron,
+:case_detection_rate_non_centered_other,
+:dur_latent_non_centered_omicron,
+:dur_infectious_non_centered_omicron,
+:IHR_non_centered_omicron,
+:dur_hospitalized_non_centered_omicron,
+:dur_icu_non_centered_omicron,
+:HICUR_non_centered_omicron,
+:ICUDR_non_centered_omicron,
+:dur_waning_non_centered_omicron,
+:E_init_non_centered_omicron,
+:I_init_non_centered_omicron,
+:case_detection_rate_non_centered_omicron,
+:death_detection_rate_non_centered,
+:ϕ_cases_non_centered,
+:ϕ_hospitalizations_non_centered,
+:ϕ_death_non_centered),
 ESS(:R0_params_non_centered))
+Random.seed!(county_id)
 
 Random.seed!(county_id)
 posterior_samples = sample(my_model, alg, MCMCThreads(), n_samples, n_chains, init_params = repeat([MAP_init], n_chains) .* collect(range(0.92, stop = 0.98, length = n_chains)))
