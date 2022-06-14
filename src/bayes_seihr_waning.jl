@@ -42,6 +42,7 @@ prob1 = ODEProblem(seir_ode_log!,
   ϕ_cases_non_centered ~ Exponential()
   ϕ_hospitalizations_non_centered ~ Exponential()
   ϕ_death_non_centered ~ Exponential()
+  ϕ_icu_non_centered ~ Exponential()
 
   # Transformations
   R₀_init_non_centered_non_omicron = R0_params_non_centered[1]
@@ -100,6 +101,7 @@ prob1 = ODEProblem(seir_ode_log!,
   ϕ_cases = ϕ_cases_non_centered^(-2)
   ϕ_hospitalizations = ϕ_hospitalizations_non_centered^(-2)
   ϕ_death = ϕ_death_non_centered^(-2)
+  ϕ_icu = ϕ_icu_non_centered^(-2)
 
   # Initial state
   prop_omicron_only_init = logistic(prop_omicron_only_init_non_centered * 0.15 + 1.2)
@@ -167,8 +169,8 @@ prob1 = ODEProblem(seir_ode_log!,
     data_est_other_cases[i] ~ NegativeBinomial2(max(other_cases_mean[i], 0.0), ϕ_cases)
     end 
     data_est_omicron_cases[i] ~ NegativeBinomial2(max(omicron_cases_mean[i], 0.0), ϕ_cases)
-    data_hospitalizations[i] ~ Poisson(max(hospitalizations_mean[i], 0.0))
-    data_icu[i] ~ Poisson(max(icu_mean[i], 0.0))
+    data_hospitalizations[i] ~ NegativeBinomial2(max(hospitalizations_mean[i], 0.0), ϕ_hospitalizations)
+    data_icu[i] ~ NegativeBinomial2(max(icu_mean[i], 0.0), ϕ_icu)
     data_est_death[i] ~ NegativeBinomial2(max(death_mean[i], 0.0), ϕ_death)
 
   end
@@ -197,6 +199,7 @@ prob1 = ODEProblem(seir_ode_log!,
     ϕ_death = ϕ_death,
     ϕ_cases = ϕ_cases,
     ϕ_hospitalizations = ϕ_hospitalizations,
+    ϕ_icu = ϕ_icu,
     β_t_non_omicron = vcat(β_init_non_omicron, β_t_values_no_init_non_omicron),
     β_t_omicron = vcat(β_init_omicron, β_t_values_no_init_omicron),
     R₀_t_non_omicron = vcat(β_init_non_omicron, β_t_values_no_init_non_omicron) / ν_non_omicron,

@@ -100,7 +100,8 @@ alg = Gibbs(NUTS(-1, 0.8,
 :death_detection_rate_non_centered,
 :ϕ_cases_non_centered,
 :ϕ_hospitalizations_non_centered,
-:ϕ_death_non_centered),
+:ϕ_death_non_centered,
+:ϕ_icu_non_centered),
 ESS(:R0_params_non_centered))
 Random.seed!(county_id)
 
