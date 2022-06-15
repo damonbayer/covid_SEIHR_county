@@ -1,10 +1,10 @@
 county,est_cases,est_omicorn_cases,est_other_cases,hospitalizations
-Alameda,2343,1020,1323,68
+Alameda,2342,1020,1322,68
 Amador,45,14,31,4
 Butte,159,75,84,25
 Calaveras,54,18,36,1
 Colusa,14,5,9,1
-Contra Costa,1380,450,930,33
+Contra Costa,1379,450,929,33
 Del Norte,18,5,13,1
 El Dorado,217,72,145,9
 Fresno,980,300,680,173
@@ -27,18 +27,18 @@ Mono,30,9,21,1
 Monterey,431,96,335,29
 Napa,199,70,129,3
 Nevada,152,43,109,6
-Orange,3952,1435,2517,195
+Orange,3953,1435,2518,195
 Placer,490,141,349,79
 Plumas,17,4,13,1
-Riverside,4836,1473,3363,317
-Sacramento,1930,687,1243,137
+Riverside,4834,1472,3362,317
+Sacramento,1925,685,1240,137
 San Benito,87,36,51,5
-San Bernardino,4219,1805,2414,403
-San Diego,7135,4581,2554,351
-San Francisco,2356,645,1711,35
-San Joaquin,841,279,562,78
+San Bernardino,4219,1806,2413,403
+San Diego,7133,4580,2553,351
+San Francisco,2357,645,1712,35
+San Joaquin,843,280,563,78
 San Luis Obispo,352,137,215,16
-San Mateo,1211,562,649,13
+San Mateo,1210,561,649,13
 Santa Barbara,640,229,411,31
 Santa Clara,2339,1492,847,125
 Santa Cruz,353,147,206,16
@@ -53,5 +53,5 @@ Trinity,3,1,2,1
 Tulare,387,97,290,51
 Tuolumne,95,30,65,7
 Ventura,1666,785,881,80
-Yolo,284,117,167,5
+Yolo,285,117,168,5
 Yuba,98,36,62,8

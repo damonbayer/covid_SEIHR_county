@@ -28,7 +28,7 @@ if priors_only
 end
 
 mkpath(resultsdir("generated_quantities"))
-mkpath(resultsdir("posterior_samples"))
+mkpath(resultsdir("posterior_predictive"))
 
 savename_dict = Dict(:county_id => county_id)
 
