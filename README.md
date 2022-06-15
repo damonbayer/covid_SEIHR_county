@@ -17,9 +17,9 @@ The model is fit with [fit_model.jl](fit_model.jl) using [Turing.jl](https://tur
 
 ![model_diagram](model_diagram.png)
 
-Priors and posteriors for the model parameters are presented in [prior_post_plots.pdf](prior_post_plots.pdf).
+Priors and posteriors for the model parameters are presented in [scalar_qq_plots.pdf](figures/scalar_qq_plots.pdf).
 
 # Results
 
-Results for each county are presented in [post_pred_plots.pdf](post_pred_plots.pdf).
+Results for each county are presented in [pp_plots.pdf](figures/pp_plots.pdf).
 
