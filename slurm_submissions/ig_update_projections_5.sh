@@ -13,6 +13,6 @@
 
 module purge
 module load R
-cd //pub/igoldst1/covid_SEIHR_county
+cd //dfs6/pub/igoldst1/covid_SEIHR_county
 
 R CMD BATCH --no-save scripts/make_plots.R
