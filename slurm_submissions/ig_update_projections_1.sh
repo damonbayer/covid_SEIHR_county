@@ -16,4 +16,4 @@ cd //dfs6/pub/igoldst1/covid_SEIHR_county
 
 Rscript scripts/pull_case_hospitalizations_data.R
 
-sbatch --dependency=afterany:$SLURM_JOB_ID ig_update_projections_2.sh
+sbatch --dependency=afterany:$SLURM_JOB_ID slurm_submissions/ig_update_projections_2.sh

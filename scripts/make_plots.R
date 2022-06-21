@@ -30,7 +30,8 @@ all_pp_summaries <- bind_rows(
 dat_tidy <-
   raw_dat %>%
   filter(time > 0) %>%
-  select(county, date, est_other_cases, est_omicron_cases, hospitalizations) %>%
+  select(county, date, est_other_cases, est_omicron_cases, hospitalizations, est_deaths, icu) %>%
+  rename(est_death = est_deaths) %>%
   pivot_longer(-c(date, county)) %>%
     left_join(county_region_key) %>%
     rename(place_name = county) %>%
@@ -107,6 +108,7 @@ make_scalar_gq_plot <- function(target_place_name) {
     scale_color_discrete(name = "Distribution") +
     theme(legend.position = "bottom")
 }
+
 
 ggsave2(filename = "figures/pp_plots.pdf",
         plot = dat_tidy %>%
