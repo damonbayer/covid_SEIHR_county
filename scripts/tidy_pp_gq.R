@@ -144,8 +144,9 @@ posterior_predictive_LEMMA_format <-
              value_type == ".upper" ~ 0.95)) %>%
   select(county, date, quantile, name, value) %>%
   pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
-  mutate(cases = est_omicron_cases + est_other_cases) %>%
-  select(date, county, quantile, hosp_census_with_covid = hospitalizations, cases)
+  mutate(cases = est_omicron_cases + est_other_cases,
+         total_hosp = hospitalizations + icu) %>%
+  select(date, county, quantile, hosp_census_with_covid = hospitalizations, cases, icu, death = est_death, total_hosp)
 
 
 write_csv(generated_quantities_summary, "results/generated_quantities_summary.csv")
