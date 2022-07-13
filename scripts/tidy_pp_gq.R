@@ -131,6 +131,10 @@ posterior_predictive_summary_CA <-
   select(county, date, name, everything(), -time) %>%
   arrange(county, date, name, .width)
 
+
+cum_deaths <- read_csv("data/cases_hospitalizations_by_county.csv") %>%
+              dplyr::select(county, date, prev_cum_est_deaths)
+
 posterior_predictive_LEMMA_format <-
   bind_rows(posterior_predictive_summary_CA,
             posterior_predictive_summary_counties) %>%
@@ -146,7 +150,9 @@ posterior_predictive_LEMMA_format <-
   pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
   mutate(cases = est_omicron_cases + est_other_cases,
          total_hosp = hospitalizations + icu) %>%
-  select(date, county, quantile, hosp_census_with_covid = total_hosp, cases, icu, death = est_death)
+  select(date, county, quantile, hosp_census_with_covid = total_hosp, cases, icu, death = est_death) %>%
+  left_join(cum_deaths, by = c("county", "date")) %>%
+  mutate(cum_death = death + prev_cum_est_deaths)
 
 
 write_csv(generated_quantities_summary, "results/generated_quantities_summary.csv")
