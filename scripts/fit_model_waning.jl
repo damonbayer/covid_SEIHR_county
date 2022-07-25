@@ -16,7 +16,7 @@ using covid_SEIHR_county
 
 county_id =
 if length(ARGS) == 0
-  29
+  1
 else
   parse(Int64, ARGS[1])
 end
@@ -24,7 +24,7 @@ end
 priors_only = county_id == 0
 
 if priors_only
-  county_id = 29
+  county_id = 1
 end
 
 mkpath(resultsdir())
@@ -34,12 +34,19 @@ savename_dict = Dict(:county_id => county_id)
 
 ## Control Parameters
 n_samples = 2_000
+# n_samples = 100
 n_chains = 4
 time_interval_in_days = 7
 
 ## Load Data
 include(projectdir("src/load_process_data.jl"))
 
+## Load overdisp priors_only
+overdisp_priors = CSV.read(datadir(string("overdisp_priors_countyid", county_id, ".csv")), DataFrame)
+ϕ_hosp_sd = overdisp_priors[1, :sd] 
+ϕ_hosp_mean = overdisp_priors[1, :mean]
+ϕ_icu_sd = overdisp_priors[2, :sd]
+ϕ_icu_mean = overdisp_priors[2, :mean]
 ## Define Priors
 include(projectdir("src/prior_constants.jl"))
 

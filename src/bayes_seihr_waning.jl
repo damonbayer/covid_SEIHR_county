@@ -40,9 +40,9 @@ prob1 = ODEProblem(seir_ode_log!,
   death_detection_rate_non_centered ~ Normal()
   
   ϕ_cases_non_centered ~ Exponential()
-  ϕ_hospitalizations_non_centered ~ Exponential()
+  ϕ_hospitalizations_non_centered ~ Normal()
   ϕ_death_non_centered ~ Exponential()
-  ϕ_icu_non_centered ~ Exponential()
+  ϕ_icu_non_centered ~ Normal()
 
   # Transformations
   R₀_init_non_centered_non_omicron = R0_params_non_centered[1]
@@ -99,9 +99,9 @@ prob1 = ODEProblem(seir_ode_log!,
 
   death_detection_rate = logistic(death_detection_rate_non_centered * 0.2 + 2.313635)
   ϕ_cases = ϕ_cases_non_centered^(-2)
-  ϕ_hospitalizations = ϕ_hospitalizations_non_centered^(-2)
+  ϕ_hospitalizations = exp(ϕ_hospitalizations_non_centered * ϕ_hosp_sd + ϕ_hosp_mean)
   ϕ_death = ϕ_death_non_centered^(-2)
-  ϕ_icu = ϕ_icu_non_centered^(-2)
+  ϕ_icu = exp(ϕ_icu_non_centered * ϕ_icu_sd + ϕ_icu_mean)
 
   # Initial state
   prop_omicron_only_init = logistic(prop_omicron_only_init_non_centered * 0.15 + 1.2)
