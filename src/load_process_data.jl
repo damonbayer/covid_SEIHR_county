@@ -13,6 +13,7 @@ popsize = subset(CSV.read("data/county_pop.csv", DataFrame), :County => ByRow(x 
 news_cases_omicron_initial = initialization_values[1, :est_omicorn_cases]
 new_cases_other_initial = initialization_values[1, :est_other_cases]
 hospitalizations_initial = initialization_values[1, :hospitalizations]
+icu_initial = initialization_values[1, :icu]
 
 obstimes = float(dat[:, :time])
 obstimes_forecast = vcat(obstimes, obstimes[end] .+ float.(1:n_forecast_times))
@@ -45,3 +46,12 @@ data_est_omicron_tests_forecast = vcat(data_est_omicron_tests, repeat([data_est_
 data_hospitalizations = dat[:, :hospitalizations]
 data_hospitalizations_forecast = vcat(data_hospitalizations, repeat([data_hospitalizations[end]], n_forecast_times))
 missing_hospitalizations_forecast = repeat([missing], length(data_hospitalizations) + n_forecast_times)
+
+data_icu = dat[:, :icu]
+data_icu_forecast = vcat(data_icu, repeat([data_icu[end]], n_forecast_times))
+missing_icu_forecast = repeat([missing], length(data_icu) + n_forecast_times)
+
+data_est_death = dat[:, :est_deaths]
+data_est_death_forecast = vcat(data_est_death, repeat([data_est_death[end]], n_forecast_times))
+missing_est_death_forecast = repeat([missing], length(data_est_death) + n_forecast_times)
+
