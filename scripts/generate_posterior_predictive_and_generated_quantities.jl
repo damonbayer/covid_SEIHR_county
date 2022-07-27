@@ -24,7 +24,7 @@ end
 priors_only = county_id == 0
 
 if priors_only
-  county_id = 29
+  county_id = 1
 end
 
 mkpath(resultsdir("generated_quantities"))
@@ -37,6 +37,13 @@ n_forecast_times = 12
 
 ## Load Data
 include(projectdir("src/load_process_data.jl"))
+
+## Load overdisp priors_only
+overdisp_priors = CSV.read(datadir(string("overdisp_priors_countyid", county_id, ".csv")), DataFrame)
+ϕ_hosp_sd = overdisp_priors[1, :sd] 
+ϕ_hosp_mean = overdisp_priors[1, :mean]
+ϕ_icu_sd = overdisp_priors[2, :sd]
+ϕ_icu_mean = overdisp_priors[2, :mean]
 
 ## Define Priors
 include(projectdir("src/prior_constants.jl"))
