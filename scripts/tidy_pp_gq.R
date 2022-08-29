@@ -94,6 +94,25 @@ posterior_predictive_samples <-
   select(county_id, results) %>%
   unnest(results)
 
+# I need to create cumulative death samples, this a kludgy but it should work
+cum_death_samples <- posterior_predictive_samples %>%
+                     group_by(county_id, iteration, chain) %>%
+                     filter(name == "est_death") %>%
+                     mutate(cum_death = cumsum(value)) %>%
+                     dplyr::select(-value, - name) %>%
+                     mutate(name = "cum_death") %>%
+                     rename(value = cum_death) %>%
+                     dplyr::select(county_id,
+                                   iteration,
+                                   chain,
+                                   name,
+                                   value,
+                                   time)
+
+
+posterior_predictive_samples <- posterior_predictive_samples %>%
+                                rbind(cum_death_samples)
+
 posterior_predictive_summary_counties <-
   posterior_predictive_samples %>%
   select(-c(iteration, chain)) %>%
@@ -135,6 +154,19 @@ posterior_predictive_summary_CA <-
 cum_deaths <- read_csv("data/cases_hospitalizations_by_county.csv") %>%
               dplyr::select(county, date, prev_cum_est_deaths)
 
+total_cum_deaths <- cum_deaths %>%
+                    filter(date == min(date)) %>%
+                    ungroup() %>%
+                    summarise(total = sum(prev_cum_est_deaths)) %>%
+                    pull()
+
+ca_deaths <- data.frame(county = "California",
+                       date = min(cum_deaths$date),
+                       prev_cum_est_deaths = total_cum_deaths)
+
+prev_deaths <- cum_deaths %>% filter(date == min(date)) %>%
+               rbind(ca_deaths)
+
 posterior_predictive_LEMMA_format <-
   bind_rows(posterior_predictive_summary_CA,
             posterior_predictive_summary_counties) %>%
@@ -150,9 +182,15 @@ posterior_predictive_LEMMA_format <-
   pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
   mutate(cases = est_omicron_cases + est_other_cases,
          total_hosp = hospitalizations + icu) %>%
-  select(date, county, quantile, hosp_census_with_covid = total_hosp, cases, icu, death = est_death) %>%
-  left_join(cum_deaths, by = c("county", "date")) %>%
-  mutate(cum_death = death + prev_cum_est_deaths)
+  select(date,
+         county,
+         quantile,
+         hosp_census_with_covid = total_hosp,
+         cases, icu,
+         death = est_death,
+         cum_death) %>%
+  left_join(prev_deaths, by = c("county")) %>%
+  mutate(total_cum_death = cum_death + prev_cum_est_deaths)
 
 
 write_csv(generated_quantities_summary, "results/generated_quantities_summary.csv")
