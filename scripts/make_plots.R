@@ -25,7 +25,8 @@ all_pp_summaries <- bind_rows(
     mutate(place_type = "Region"),
   read_csv("results/posterior_predictive_summary_counties.csv") %>%
     rename(place_name = county) %>%
-    mutate(place_type = "County"))
+    mutate(place_type = "County")) %>%
+  filter(name != "cum_death")
 
 dat_tidy <-
   raw_dat %>%
