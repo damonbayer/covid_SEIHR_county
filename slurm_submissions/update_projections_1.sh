@@ -16,4 +16,4 @@ cd //dfs6/pub/bayerd/covid_SEIHR_county
 
 Rscript scripts/pull_case_hospitalizations_data.R
 
-sbatch --dependency=afterany:$SLURM_JOB_ID update_projections_2.sh
+sbatch --depend=afterany:$SLURM_JOB_ID slurm_submissions/update_projections_2.sh
