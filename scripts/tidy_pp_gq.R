@@ -118,7 +118,7 @@ cum_death_samples <- posterior_predictive_samples %>%
 
 
 posterior_predictive_samples <- posterior_predictive_samples %>%
-                                rbind(cum_death_samples)
+                                bind_rows(cum_death_samples)
 
 posterior_predictive_summary_counties <-
   posterior_predictive_samples %>%
@@ -176,10 +176,10 @@ ca_final_deaths <- ca_cum_deaths %>%
                    filter(date == max(date))
 
 prev_cum_deaths <- cum_deaths %>%
-                   rbind(ca_cum_deaths)
+                   bind_rows(ca_cum_deaths)
 
 prev_final_deaths <- cum_deaths %>% filter(date == max(date)) %>%
-               rbind(ca_final_deaths) %>%
+               bind_rows(ca_final_deaths) %>%
                dplyr::select(-date)
 
 
@@ -217,7 +217,7 @@ LEMMA_predict <- posterior_predictive_LEMMA_format_pre %>%
   left_join(prev_final_deaths, by = c("county")) %>%
   mutate(total_cum_death = prev_cum_est_deaths + cum_death)
 
-posterior_predictive_LEMMA_format <- rbind(LEMMA_obs, LEMMA_predict)
+posterior_predictive_LEMMA_format <- bind_rows(LEMMA_obs, LEMMA_predict)
 
 
 write_csv(generated_quantities_summary, "results/generated_quantities_summary.csv")

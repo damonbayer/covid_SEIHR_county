@@ -77,9 +77,8 @@ hosp <-
          hospitalized_covid_patients,
          icu_covid_patients,
          county) %>%
-  mutate(hospitalized_covid_patients = hospitalized_covid_patients - icu_covid_patients)
-
-hosp$hospitalized_covid_patients[hosp$hospitalized_covid_patients < 0] <- 0
+  mutate(hospitalized_covid_patients = hospitalized_covid_patients - icu_covid_patients) %>%
+  mutate(hospitalized_covid_patients = ifelse(hospitalized_covid_patients < 0, 0, hospitalized_covid_patients))
 
 county_pop <- read_csv("data/county_pop.csv") %>% rename_all(str_to_lower)
 
