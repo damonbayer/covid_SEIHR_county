@@ -69,9 +69,10 @@ hosp <-
          hospitalized_covid_patients = as.integer(hospitalized_covid_confirmed_patients),
          icu_covid_confirmed_patients = as.integer(icu_covid_confirmed_patients),
          icu_suspected_covid_patients = as.integer(icu_suspected_covid_patients)) %>%
-  mutate(icu_covid_patients =
-           if_else(is.na(icu_covid_confirmed_patients), 0L, icu_covid_confirmed_patients) +
-           if_else(is.na(icu_suspected_covid_patients), 0L, icu_suspected_covid_patients)) %>%
+  replace_na(list(hospitalized_covid_patients = 0L,
+                  icu_covid_confirmed_patients = 0L,
+                  icu_suspected_covid_patients = 0L)) %>%
+  mutate(icu_covid_patients = icu_covid_confirmed_patients + icu_suspected_covid_patients) %>%
   select(date = todays_date,
          hospitalized_covid_patients,
          icu_covid_patients,
