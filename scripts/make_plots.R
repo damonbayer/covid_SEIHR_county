@@ -25,12 +25,14 @@ all_pp_summaries <- bind_rows(
     mutate(place_type = "Region"),
   read_csv("results/posterior_predictive_summary_counties.csv") %>%
     rename(place_name = county) %>%
-    mutate(place_type = "County"))
+    mutate(place_type = "County")) %>%
+  filter(name != "cum_death")
 
 dat_tidy <-
   raw_dat %>%
   filter(time > 0) %>%
-  select(county, date, est_other_cases, est_omicron_cases, hospitalizations) %>%
+  select(county, date, est_other_cases, est_omicron_cases, hospitalizations, est_deaths, icu) %>%
+  rename(est_death = est_deaths) %>%
   pivot_longer(-c(date, county)) %>%
     left_join(county_region_key) %>%
     rename(place_name = county) %>%
@@ -66,7 +68,9 @@ make_post_pred_plot <- function(target_place_name) {
                labeller = as_labeller(
                  c(hospitalizations = "Concurrent Hospitalizations",
                    est_omicron_cases = "Reported Omicron Cases (7 day bins)",
-                   est_other_cases = "Reported Other Cases (7 day bins)"))) +
+                   est_other_cases = "Reported Other Cases (7 day bins)",
+                   icu = "Concurrent ICU",
+                   est_death = "Reported Deaths"))) +
     geom_lineribbon(data = tmp_posterior_predictive_intervals,
                     mapping = aes(ymin = .lower, ymax = .upper)) +
     geom_point(data = tmp_dat_tidy) +
@@ -105,6 +109,7 @@ make_scalar_gq_plot <- function(target_place_name) {
     scale_color_discrete(name = "Distribution") +
     theme(legend.position = "bottom")
 }
+
 
 ggsave2(filename = "figures/pp_plots.pdf",
         plot = dat_tidy %>%

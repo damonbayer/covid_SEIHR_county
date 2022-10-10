@@ -24,7 +24,7 @@ end
 priors_only = county_id == 0
 
 if priors_only
-  county_id = 29
+  county_id = 1
 end
 
 mkpath(resultsdir("generated_quantities"))
@@ -37,6 +37,13 @@ n_forecast_times = 12
 
 ## Load Data
 include(projectdir("src/load_process_data.jl"))
+
+## Load overdisp priors_only
+overdisp_priors = CSV.read(datadir(string("overdisp_priors_countyid", county_id, ".csv")), DataFrame)
+ϕ_hosp_sd = overdisp_priors[overdisp_priors.labels .== "hosp", :sd] 
+ϕ_hosp_mean = overdisp_priors[overdisp_priors.labels .== "hosp", :mean]
+ϕ_icu_sd = overdisp_priors[overdisp_priors.labels .== "icu", :sd]
+ϕ_icu_mean = overdisp_priors[overdisp_priors.labels .== "icu", :mean]
 
 ## Define Priors
 include(projectdir("src/prior_constants.jl"))
@@ -53,6 +60,8 @@ my_model = bayes_seihr(
   data_hospitalizations,
   data_est_other_tests,
   data_est_omicron_tests,
+  data_icu, 
+  data_est_death,
   obstimes,
   param_change_times,
   false,
@@ -64,6 +73,8 @@ my_model_forecast = bayes_seihr(
   data_hospitalizations_forecast,
   data_est_other_tests_forecast,
   data_est_omicron_tests_forecast,
+  data_icu_forecast, 
+  data_est_death_forecast,
   obstimes_forecast,
   param_change_times_forecast,
   true,
@@ -75,6 +86,8 @@ my_model_forecast_missing = bayes_seihr(
   missing_hospitalizations_forecast,
   data_est_other_tests_forecast,
   data_est_omicron_tests_forecast,
+  missing_icu_forecast, 
+  missing_est_death_forecast,
   obstimes_forecast,
   param_change_times_forecast,
   true,
