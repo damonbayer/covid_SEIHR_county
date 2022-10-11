@@ -3,7 +3,7 @@
 library(tidyverse)
 library(rstan)
 library(brms)
-options(mc.cores = parallel::detectCores())
+options(mc.cores = parallelly::availableCores())
 rstan_options(auto_write = TRUE)
 
 source("src/spline_functions.R")

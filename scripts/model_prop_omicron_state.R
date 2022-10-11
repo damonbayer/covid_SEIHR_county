@@ -7,7 +7,7 @@ library(lubridate)
 library(scales)
 source("src/plot_functions.R")
 options(brms.backend = "cmdstanr",
-        mc.cores=parallel::detectCores())
+        mc.cores = parallelly::availableCores())
 
 county_variant_data <- read_csv("data/county_greek_data.csv") %>%
   pivot_longer(-c(county, date), names_to = "greek", values_to = "n") %>%
