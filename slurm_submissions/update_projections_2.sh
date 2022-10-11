@@ -12,7 +12,7 @@
 #SBATCH --array=0-56
 
 module purge
-module load julia-lts
+module load julia/1.8.2
 cd //dfs6/pub/bayerd/covid_SEIHR_county
 
 if [ $SLURM_ARRAY_TASK_ID == 1 ]; then
