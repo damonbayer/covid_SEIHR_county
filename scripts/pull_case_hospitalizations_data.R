@@ -193,4 +193,6 @@ write_csv(dat, "data/cases_hospitalizations_by_county.csv")
 write_csv(initialization_values, "data/initialization_values.csv")
 write_csv(county_id_key, "data/county_id_key.csv")
 # Clear results for next fit
-dir_delete(results_dir)
+if (dir_exists(results_dir)) {
+  dir_delete(results_dir)
+}
