@@ -1,0 +1,187 @@
+\documentclass[11pt]{article}
+\usepackage{bm}
+\usepackage{db}
+\usepackage{amsmath}
+%\newcommand{\matr}[1]{\bm{#1}}
+\usepackage{hyperref}
+
+
+\begin{document}
+
+I am following along from Section 2.1 of \href{https://paperpile.com/app/p/3ac94d2d-a793-030e-b8a5-93733f228342}{The construction of next-generation matrices for compartmental epidemic models}
+
+The non-linearized infection subsystem of our model is:
+
+\begin{align*}
+	\dot{E}_n =& \text{infection\_non\_omicron} - \text{progression\_non\_omicron}\\
+	\dot{E}_o =& \text{infection\_omicron} - \text{progression\_omicron}\\
+	\dot{I}_n =& \text{progression\_non\_omicron} - (\text{hospitalization\_non\_omicron} + \text{non\_hospitalized\_recovery\_non\_omicron})\\
+	\dot{I}_o =& \text{progression\_omicron} - (\text{hospitalization\_omicron} + \text{non\_hospitalized\_recovery\_omicron})
+\end{align*}
+
+Let \( \matr{x} = \begin{bmatrix} E_n & E_o & I_n & I_o \end{bmatrix}^\prime \).
+
+Then, in mathematical notation, we have
+
+\[
+	\dot{\matr{x}}	=
+	\begin{bmatrix}
+		\beta_n \cdot I_n \cdot \frac{S_b}{N} - \gamma_n \cdot E_n\\
+		\beta_o \cdot I_o \cdot \frac{S_b}{N} + \beta_o \cdot I_o \cdot \frac{S_o}{N} - \gamma_o \cdot E_o\\
+		\gamma_n \cdot E_n - (\nu_n \cdot IHR_n \cdot I_n + \nu_n \cdot (1 - IHR_n) \cdot I_n)\\
+		\gamma_o \cdot E_o - (\nu_o \cdot IHR_o \cdot I_o + \nu_o \cdot (1 - IHR_o) \cdot I_o)
+	 \end{bmatrix}\\
+	 =
+	 \begin{bmatrix}
+	 	\beta_n \cdot I_n \cdot \frac{S_b}{N} - \gamma_n \cdot E_n\\
+		\beta_o \cdot I_o \left( \frac{S_b + S_o}{N} \right) - \gamma_o \cdot E_o\\
+		\gamma_n \cdot E_n - \nu_n \cdot I_n\\
+		\gamma_o \cdot E_o - \nu_o \cdot I_o
+	 \end{bmatrix}
+\]
+
+Then the Jacobian is:
+
+
+\begin{align*}
+	\matr{J} =&
+	\begin{bmatrix}
+		\frac{\partial \dot{E}_n}{\partial E_n} & 	\frac{\partial \dot{E}_n}{\partial E_o} & 	\frac{\partial \dot{E}_n}{\partial I_n} & 	\frac{\partial \dot{E}_n}{\partial I_o} \\
+		\frac{\partial \dot{E}_o}{\partial E_n} & 	\frac{\partial \dot{E}_o}{\partial E_o} & 	\frac{\partial \dot{E}_o}{\partial I_n} & 	\frac{\partial \dot{E}_o}{\partial I_o}\\
+		\frac{\partial \dot{I}_n}{\partial E_n} & 	\frac{\partial \dot{I}_n}{\partial E_o} & 	\frac{\partial \dot{I}_n}{\partial I_n} & 	\frac{\partial \dot{I}_n}{\partial I_o}\\
+		\frac{\partial \dot{I}_o}{\partial E_n} & 	\frac{\partial \dot{I}_o}{\partial E_o} & 	\frac{\partial \dot{I}_o}{\partial I_n} & 	\frac{\partial \dot{I}_o}{\partial I_o}\\
+	 \end{bmatrix}\\
+	 =&
+	\begin{bmatrix}
+		-\gamma_n &	0	&	\beta_n \left( \frac{S_b}{N} \right) & 	0 \\
+		0 & 	-\gamma_o & 0 & \beta_o \left( \frac{S_b + S_o}{N} \right)\\
+		\gamma_n & 0 & 	-\nu_n &		0	\\
+		0 & 	\gamma_o & 	0 & -\nu_o \\
+	 \end{bmatrix}
+\end{align*}
+
+At the infection-free steady-state we have \( S_b + S_o = N \), and all other compartments equal to 0.
+Let \( S_b = \rho N \) and \( S_o = (1 - \rho) N \).
+Then the linearized subsystem at the infection-free steady state is given by
+
+\begin{align*}
+	\dot{\matr{x}} =& \matr{J}\rvert_{S_b + S_o = N} \matr{x}\\
+	=& 
+	\begin{bmatrix}
+		-\gamma_n &	0	&	\beta_n \rho & 	0 \\
+		0 & 	-\gamma_o & 0 & \beta_o \\
+		\gamma_n & 0 & 	-\nu_n &		0	\\
+		0 & 	\gamma_o & 	0 & -\nu_o \\
+	 \end{bmatrix}
+	\begin{bmatrix} E_n \\ E_o \\ I_n \\ I_o \end{bmatrix} \\
+	=&
+	\begin{bmatrix}
+		-\gamma_n E_n + \beta_n \rho I_n\\
+		-\gamma_o E_o + \beta_o I_o \\
+		\gamma_n E_n -\nu_n I_n	\\
+		\gamma_o E_o -\nu_o I_o \\
+	\end{bmatrix}\\
+	=&
+	\begin{bmatrix}
+		\beta_n \rho I_n - \gamma_n E_n\\
+		\beta_o I_o -\gamma_o E_o \\
+		\gamma_n E_n - \nu_n I_n	\\
+		\gamma_o E_o - \nu_o I_o \\
+	\end{bmatrix}
+\end{align*}
+
+
+We want to write the linearized infection subsystem in the form
+
+\[ \dot{\bm{x}}=(\bm{T}+\bm{\Sigma}) \bm{x} \]
+
+where the matrix \( \bm{T} \) corresponds to transmissions and the matrix \( \bm{\Sigma} \) to transitions.
+
+Thus,
+
+\[ \matr{T} = 
+	\begin{bmatrix}
+		0 &	0	&	\beta_n \rho & 	0 \\
+		0 & 	0 & 0 & \beta_o \\
+		0 & 0 & 	0 &		0	\\
+		0 & 	0 & 	0 & 0 \\
+	 \end{bmatrix} \]
+
+and
+
+\[ \matr{\Sigma} =
+	\begin{bmatrix}
+		-\gamma_n &	0	&	0 & 	0 \\
+		0 & 	-\gamma_o & 0 & 0 \\
+		\gamma_n & 0 & 	-\nu_n &		0	\\
+		0 & 	\gamma_o & 	0 & -\nu_o \\
+	 \end{bmatrix}
+ \]
+
+
+Now, the NGM with large domain (\( \matr{K_L} \)) is given by
+
+\begin{align*}
+	\matr{K_L}	=&	-\matr{T}\matr{\Sigma}^{-1}\\
+	=&	-\begin{bmatrix}
+		0 &	0	&	\beta_n \rho & 	0 \\
+		0 & 	0 & 0 & \beta_o \\
+		0 & 0 & 	0 &		0	\\
+		0 & 	0 & 	0 & 0 \\
+	 \end{bmatrix}
+	 \begin{bmatrix}
+	 	\frac{-1}{\gamma_n} & 0 & 0 & 0 \\
+	 	0 & \frac{-1}{\gamma_o} & 0 & 0 \\
+	 	\frac{-1}{\nu_n} & 0 & \frac{-1}{\nu_n} & 0 \\
+	 	0 & \frac{-1}{\nu_o} & 0 & \frac{-1}{\nu_o} \\
+	 \end{bmatrix}\\
+	 =& \begin{bmatrix} 
+		 \frac{\beta_n \rho}{\nu_n} & 0 & \frac{\beta_n \rho}{\nu_n} & 0 \\
+		0 & \frac{\beta_o}{\nu_o} & 0 & \frac{\beta_o}{\nu_o} \\
+		0 & 0 & 0 & 0 \\
+		0 & 0 & 0 & 0 \\
+	  \end{bmatrix}
+\end{align*}
+
+The dominant eigenvalue of \( \matr{K_L} \) is \( R_0 \).
+
+However, we  note \( \matr{T} \) has a special structure, with the third and fourth rows being all 0.
+Thus the NGM is only two dimensional.
+
+Now, we define \( \matr{E} \) as consisting of unit column vectors for each row of \( \matr{T} \) that is not identically 0.
+
+\[ \matr{E} = \begin{bmatrix} 1 & 0 \\ 0 & 1 \\ 0 & 0 \\ 0 & 0 \end{bmatrix} \]
+
+Then the NGM is given by
+
+\[
+	\matr{K} = \matr{E}^\prime \matr{K_L} \matr{E} = 
+	\begin{bmatrix} 
+	\frac{\beta_n \rho}{\nu_n} & 0 \\
+0 & \frac{\beta_o}{\nu_o} \\ \end{bmatrix}
+\]
+
+Then recall that the dominant eigenvalue (and thus \( R_0 \)) of a 2x2 matrix is given by
+
+
+\begin{align*}
+	R_0 =& \frac{1}{2} \left( \Tr(\matr{K}) + \sqrt{\Tr({K})^2 - 4\det(\matr{K})} \right)\\
+	=&	\frac{1}{2} \left( \frac{\beta_o}{\nu_o} + \frac{\beta_n \rho}{\nu_n} + \sqrt{\left( \frac{\beta_o}{\nu_o} + \frac{\beta_n \rho}{\nu_n} \right)^{2} - \frac{ 4 \beta_o \beta_n \rho}{\nu_o \nu_n}}\right)\\
+	=&	\frac{1}{2} \left( \frac{\beta_o}{\nu_o} + \frac{\beta_n}{\nu_n}\left(\frac{S_b}{N}\right) + \sqrt{\left( \frac{\beta_o}{\nu_o} + \frac{\beta_n}{\nu_n}\left(\frac{S_b}{N}\right) \right)^{2} - \frac{ 4 \beta_o \beta_n}{\nu_o \nu_n}\left(\frac{S_b}{N}\right)}\right)
+\end{align*}
+
+
+To check if this seems, right we consider when \( S_b = 0 \).
+Then \( R_0 \) should just be the usual \(  R_0 \) for the standard SEIR model.
+
+
+
+\begin{align*}
+	R_0\rvert_{S_b = 0} =& \frac{1}{2} \left( \frac{\beta_o}{\nu_o} + \frac{\beta_n}{\nu_n}\left(\frac{0}{N}\right) + \sqrt{\left( \frac{\beta_o}{\nu_o} + \frac{\beta_n}{\nu_n}\left(\frac{0}{N}\right) \right)^{2} - \frac{ 4 \beta_o \beta_n}{\nu_o \nu_n}\left(\frac{0}{N}\right)}\right)\\
+	=& \frac{1}{2} \left( \frac{\beta_o}{\nu_o} + \sqrt{\left( \frac{\beta_o}{\nu_o} \right)^{2}}\right)\\
+	=& \frac{\beta_o}{\nu_o}
+\end{align*}
+
+
+
+\end{document}
