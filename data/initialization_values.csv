@@ -1,57 +1,57 @@
 county,est_cases,est_omicorn_cases,est_other_cases,hospitalizations,icu
-Alameda,2352,1091,1261,52,16
-Amador,45,16,29,2,2
-Butte,162,83,79,24,1
-Calaveras,54,21,33,1,1
-Colusa,15,6,9,1,1
-Contra Costa,1381,468,913,25,8
-Del Norte,18,6,12,1,1
-El Dorado,215,81,134,7,2
-Fresno,975,339,636,128,45
-Glenn,20,7,13,1,1
-Humboldt,146,58,88,10,2
-Imperial,591,220,371,37,27
-Inyo,27,11,16,1,1
-Kern,895,375,520,91,29
-Kings,236,87,149,17,2
-Lake,35,11,24,1,1
-Lassen,8,2,6,1,1
-Los Angeles,25531,17500,8031,569,172
-Madera,163,56,107,10,4
-Marin,443,159,284,3,1
-Mariposa,16,5,11,1,1
-Mendocino,87,24,63,2,3
-Merced,261,107,154,9,13
-Modoc,4,1,3,2,1
-Mono,30,9,21,1,1
-Monterey,431,108,323,24,5
-Napa,199,90,109,2,1
-Nevada,152,52,100,3,3
-Orange,3952,1903,2049,139,56
-Placer,490,163,327,52,27
-Plumas,17,4,13,1,1
-Riverside,4832,1968,2864,235,82
-Sacramento,1914,742,1172,91,46
-San Benito,87,38,49,3,2
-San Bernardino,4328,1991,2337,286,117
-San Diego,7104,4776,2328,258,93
-San Francisco,2359,565,1794,25,10
-San Joaquin,844,308,536,51,27
-San Luis Obispo,353,151,202,12,4
-San Mateo,1210,583,627,8,5
-Santa Barbara,640,256,384,19,12
-Santa Clara,2338,1545,793,85,40
-Santa Cruz,354,156,198,10,6
-Shasta,154,60,94,26,9
-Siskiyou,17,7,10,4,1
-Solano,440,179,261,19,6
-Sonoma,660,274,386,27,3
-Stanislaus,626,190,436,91,22
-Sutter,94,39,55,1,1
-Tehama,54,16,38,5,3
+Alameda,1635,721,914,53,19
+Amador,39,13,26,4,3
+Butte,152,75,77,30,1
+Calaveras,56,20,36,4,1
+Colusa,18,7,11,1,1
+Contra Costa,1042,332,710,25,9
+Del Norte,12,4,8,1,1
+El Dorado,185,65,120,7,5
+Fresno,932,305,627,139,50
+Glenn,11,3,8,1,1
+Humboldt,143,53,90,10,3
+Imperial,555,195,360,39,24
+Inyo,22,8,14,1,1
+Kern,853,341,512,90,32
+Kings,215,76,139,17,3
+Lake,42,13,29,1,1
+Lassen,7,1,6,1,1
+Los Angeles,17113,11404,5709,567,182
+Madera,152,50,102,11,4
+Marin,290,98,192,7,2
+Mariposa,14,4,10,1,1
+Mendocino,86,23,63,4,1
+Merced,236,93,143,12,13
+Modoc,2,1,2,3,1
+Mono,33,9,24,1,1
+Monterey,356,83,273,17,4
+Napa,163,70,93,6,1
+Nevada,134,44,90,5,1
+Orange,2963,1355,1608,142,56
+Placer,402,124,278,56,29
+Plumas,32,10,22,1,1
+Riverside,4053,1556,2497,233,76
+Sacramento,1668,613,1055,97,45
+San Benito,93,40,53,3,3
+San Bernardino,3680,1603,2077,302,90
+San Diego,5589,3649,1940,268,99
+San Francisco,1482,330,1152,23,14
+San Joaquin,766,266,500,57,25
+San Luis Obispo,272,112,160,12,3
+San Mateo,806,368,438,14,4
+Santa Barbara,498,188,310,25,13
+Santa Clara,1760,1120,640,86,36
+Santa Cruz,281,118,163,7,5
+Shasta,133,48,85,24,7
+Siskiyou,27,12,15,4,1
+Solano,366,141,225,21,6
+Sonoma,493,194,299,25,3
+Stanislaus,591,170,421,84,26
+Sutter,82,31,51,1,1
+Tehama,46,14,32,5,3
 Trinity,3,1,2,1,1
-Tulare,387,115,272,38,13
-Tuolumne,97,34,63,6,1
-Ventura,1659,831,828,67,13
-Yolo,285,122,163,4,1
-Yuba,97,42,55,4,4
+Tulare,386,109,277,41,16
+Tuolumne,76,25,51,5,1
+Ventura,1181,563,618,55,19
+Yolo,217,88,129,2,1
+Yuba,91,38,53,9,4
