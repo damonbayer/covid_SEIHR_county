@@ -4,24 +4,23 @@
 \usepackage{amsmath}
 %\newcommand{\matr}[1]{\bm{#1}}
 \usepackage{hyperref}
-
+\hypersetup{colorlinks=true}
 
 \begin{document}
 
-I am following along from Section 2.1 of \href{https://paperpile.com/app/p/3ac94d2d-a793-030e-b8a5-93733f228342}{The construction of next-generation matrices for compartmental epidemic models}
+I am following along from Section 2.1 of \href{https://paperpile.com/app/p/3ac94d2d-a793-030e-b8a5-93733f228342}{``The construction of next-generation matrices for compartmental epidemic models."}
 
+Let \( \matr{x} = \begin{bmatrix} E_n & E_o & I_n & I_o \end{bmatrix}^\prime \) be the infection subsystem of our model.
 The non-linearized infection subsystem of our model is:
 
-\begin{align*}
-	\dot{E}_n =& \text{infection\_non\_omicron} - \text{progression\_non\_omicron}\\
-	\dot{E}_o =& \text{infection\_omicron} - \text{progression\_omicron}\\
-	\dot{I}_n =& \text{progression\_non\_omicron} - (\text{hospitalization\_non\_omicron} + \text{non\_hospitalized\_recovery\_non\_omicron})\\
-	\dot{I}_o =& \text{progression\_omicron} - (\text{hospitalization\_omicron} + \text{non\_hospitalized\_recovery\_omicron})
-\end{align*}
+%\begin{align*}
+%	\dot{E}_n =& \text{infection\_non\_omicron} - \text{progression\_non\_omicron}\\
+%	\dot{E}_o =& \text{infection\_omicron} - \text{progression\_omicron}\\
+%	\dot{I}_n =& \text{progression\_non\_omicron} - (\text{hospitalization\_non\_omicron} + \text{non\_hospitalized\_recovery\_non\_omicron})\\
+%	\dot{I}_o =& \text{progression\_omicron} - (\text{hospitalization\_omicron} + \text{non\_hospitalized\_recovery\_omicron})
+%\end{align*}
 
-Let \( \matr{x} = \begin{bmatrix} E_n & E_o & I_n & I_o \end{bmatrix}^\prime \).
-
-Then, in mathematical notation, we have
+%Then, in mathematical notation, we have
 
 \[
 	\dot{\matr{x}}	=
@@ -161,7 +160,11 @@ Then the NGM is given by
 0 & \frac{\beta_o}{\nu_o} \\ \end{bmatrix}
 \]
 
-Then recall that the dominant eigenvalue (and thus \( R_0 \)) of a 2x2 matrix is given by
+The eigenvalues of a diagonal matrix are its diagonal entries, so the dominant eigenvalue (and thus \( R_0 \)) is 
+
+\[ R_0 = \max \left( \frac{\beta_n \rho}{\nu_n}, \frac{\beta_o}{\nu_o} \right) = \max \left( \frac{\beta_n}{\nu_n} \cdot \frac{S_b}{N}, \frac{\beta_o}{\nu_o} \right) \]
+
+We can also compute the dominant eigenvalues as the \href{https://en.wikipedia.org/wiki/Eigenvalue_algorithm#2.C3.972_matrices}{solution to the characteristic polynomial}: 
 
 
 \begin{align*}
