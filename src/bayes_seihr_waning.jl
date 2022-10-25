@@ -180,8 +180,9 @@ prob1 = ODEProblem(seir_ode_log!,
   R₀_t_non_omicron = β_t_non_omicron / ν_non_omicron
   R₀_t_omicron =  β_t_omicron / ν_omicron
   S_both = sol_reg_scale_array[1, :]
-  R₀_t = ((β_t_omicron) / ν_omicron + (β_t_non_omicron * (S_both / popsize)) / ν_non_omicron + sqrt((β_t_omicron / ν_omicron + (β_t_non_omicron * (S_both / popsize)) / ν_non_omicron)^2 + (-4 * β_t_omicron * β_t_non_omicron * (S_both / popsize)) / (ν_omicron*ν_non_omicron))) / 2
-  Rₜ_t = R₀_t * (S_both + S_omicron_only) / popsize
+  S_omicron_only = sol_reg_scale_array[2, :]
+  R₀_t = max.(β_t_omicron / ν_omicron, β_t_non_omicron / ν_non_omicron .* S_both / popsize)
+  Rₜ_t = R₀_t .* (S_both + S_omicron_only) / popsize
   return (
     σ_R0 = σ_R0,
     case_detection_rate_other = case_detection_rate_other,
