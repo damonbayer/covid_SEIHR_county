@@ -249,8 +249,11 @@ LEMMA_predict <- posterior_predictive_LEMMA_format_pre %>%
   left_join(prev_final_deaths, by = c("county")) %>%
   mutate(total_cum_death = prev_cum_est_deaths + cum_death)
 
-posterior_predictive_LEMMA_format <- bind_rows(LEMMA_obs, LEMMA_predict)
-
+posterior_predictive_LEMMA_format <- bind_rows(LEMMA_obs, LEMMA_predict) %>%
+  left_join(generated_quantities_summary %>%
+            filter(name == "Rₜ_t") %>%
+            distinct(county, date, value) %>%
+            rename(Rt = value))
 
 write_csv(generated_quantities_summary, "results/generated_quantities_summary.csv")
 write_csv(posterior_predictive_LEMMA_format, "posterior_predictive_LEMMA_format.csv")

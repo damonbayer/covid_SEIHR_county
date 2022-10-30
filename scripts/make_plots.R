@@ -110,6 +110,19 @@ make_scalar_gq_plot <- function(target_place_name) {
     theme(legend.position = "bottom")
 }
 
+make_rt_plot <- function(target_place_name) {
+  generated_quantities_summary %>%
+    filter(county == target_place_name) %>%
+    filter(!is.na(date)) %>%
+    filter(name == "Rₜ_t") %>%
+    ggplot(aes(date, value, ymin = .lower, ymax = .upper)) +
+    geom_lineribbon() +
+    scale_y_continuous("Rt", label = comma) +
+    scale_x_date(name = "Date") +
+    ggtitle(str_c(target_place_name %>% str_to_title(), "County", sep = " "),
+            subtitle = str_c("Forecasted", max(dat_tidy$date), sep = " ")) +
+    my_theme
+}
 
 ggsave2(filename = "figures/pp_plots.pdf",
         plot = dat_tidy %>%
@@ -129,6 +142,17 @@ ggsave2(filename = "figures/time_varying_gq_plots.pdf",
           arrange(place_name) %>%
           pull(place_name) %>%
           map(make_time_varying_gq_plot) %>%
+          marrangeGrob(ncol = 1, nrow = 1),
+        width = 12,
+        height = 8)
+
+ggsave2(filename = "figures/rt_plots.pdf",
+        plot = dat_tidy %>%
+          filter(place_type == "county") %>%
+          distinct(place_name) %>%
+          arrange(place_name) %>%
+          pull(place_name) %>%
+          map(make_rt_plot) %>%
           marrangeGrob(ncol = 1, nrow = 1),
         width = 12,
         height = 8)
