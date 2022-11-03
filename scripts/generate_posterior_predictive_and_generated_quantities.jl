@@ -5,6 +5,7 @@ using FileIO
 using CSV
 using DataFrames
 using Turing
+using LinearAlgebra
 using DifferentialEquations
 using LogExpFunctions
 using Random
@@ -60,7 +61,7 @@ my_model = bayes_seihr(
   data_hospitalizations,
   data_est_other_tests,
   data_est_omicron_tests,
-  data_icu, 
+  data_icu,
   data_est_death,
   obstimes,
   param_change_times,
@@ -73,7 +74,7 @@ my_model_forecast = bayes_seihr(
   data_hospitalizations_forecast,
   data_est_other_tests_forecast,
   data_est_omicron_tests_forecast,
-  data_icu_forecast, 
+  data_icu_forecast,
   data_est_death_forecast,
   obstimes_forecast,
   param_change_times_forecast,
@@ -86,7 +87,7 @@ my_model_forecast_missing = bayes_seihr(
   missing_hospitalizations_forecast,
   data_est_other_tests_forecast,
   data_est_omicron_tests_forecast,
-  missing_icu_forecast, 
+  missing_icu_forecast,
   missing_est_death_forecast,
   obstimes_forecast,
   param_change_times_forecast,
@@ -95,15 +96,15 @@ my_model_forecast_missing = bayes_seihr(
 
 if priors_only
     prior_samples = load(resultsdir("prior_samples.jld2"))["prior_samples"]
-    
+
     Random.seed!(county_id)
     prior_samples_forecast_zeros = augment_chains_with_forecast_samples(Chains(prior_samples, :parameters), my_model, my_model_forecast, "zeros")
     prior_indices_to_keep = .!isnothing.(generated_quantities(my_model_forecast, prior_samples_forecast_zeros));
-    
+
     Random.seed!(county_id)
     prior_predictive_zeros = predict(my_model_forecast_missing, prior_samples_forecast_zeros)
     CSV.write(resultsdir("prior_predictive.csv"), DataFrame(prior_predictive_zeros))
-    
+
     Random.seed!(county_id)
     gq_zeros = get_gq_chains(my_model_forecast, prior_samples_forecast_zeros);
     CSV.write(resultsdir("prior_generated_quantities.csv"), DataFrame(gq_zeros))

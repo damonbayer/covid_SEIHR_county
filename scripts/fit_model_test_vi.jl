@@ -5,6 +5,7 @@ using FileIO
 using CSV
 using DataFrames
 using Turing
+using LinearAlgebra
 using DifferentialEquations
 using LogExpFunctions
 using Random
@@ -133,7 +134,7 @@ function seir_ode_log!(du, u, p, t)
   infection_omicron_only_to_omicron = β_init_omicron * I_omicron * S_omicron_only / N
   infection_both_to_omicron = β_init_omicron * I_omicron * S_both / N
   infection_both_to_non_omicron = β_init_non_omicron * I_non_omicron * S_both / N
-  
+
   infection_omicron = infection_both_to_omicron + infection_omicron_only_to_omicron
   infection_non_omicron = infection_both_to_non_omicron
 
@@ -175,12 +176,12 @@ prob1 = ODEProblem(seir_ode_log!,
     ones(10)
     )
 
-@model function bayes_seihr(data_est_other_cases, data_est_omicron_cases, data_hospitalizations, 
+@model function bayes_seihr(data_est_other_cases, data_est_omicron_cases, data_hospitalizations,
   data_est_other_tests, data_est_omicron_tests, obstimes, param_change_times, extra_ode_precision,end_other_cases_time)
   l = length(data_est_other_cases)
 
   # Priors
-  R0_params_non_centered ~ MvNormal(l + 3, 1) # +3 for sigma, non_omicron_init, omicron_init
+  R0_params_non_centered ~ MvNormal(l + 3, 1.0 * I) # +3 for sigma, non_omicron_init, omicron_init
   prop_omicron_only_init_non_centered ~ Normal()
   dur_latent_non_centered_non_omicron ~ Normal()
   dur_infectious_non_centered_non_omicron ~ Normal()
@@ -189,7 +190,7 @@ prob1 = ODEProblem(seir_ode_log!,
   E_init_non_centered_non_omicron ~ Normal()
   I_init_non_centered_non_omicron ~ Normal()
   case_detection_rate_non_centered_other ~ Normal()
-  
+
   dur_latent_non_centered_omicron ~ Normal()
   dur_infectious_non_centered_omicron ~ Normal()
   IHR_non_centered_omicron ~ Normal()
@@ -210,7 +211,7 @@ prob1 = ODEProblem(seir_ode_log!,
   R₀_init_non_omicron = exp(R₀_init_non_centered_non_omicron * 0.2 + 1.65)
   R₀_init_omicron = exp(R₀_init_non_centered_omicron * 0.2 + 0.55)
   σ_R0 = exp(σ_R0_non_centered * 0.2 - 3)
-  
+
   case_detection_rate_other = logistic.(case_detection_rate_non_centered_other * 0.2 .- 1.1)
   case_detection_rate_omicron = logistic.(case_detection_rate_non_centered_omicron * 0.2 .- 1.6)
 
@@ -261,21 +262,21 @@ prob1 = ODEProblem(seir_ode_log!,
   β_t_values_no_init_non_omicron = exp.(log(R₀_init_non_omicron) .+ cumsum(vec(log_R0_steps_non_centered) * σ_R0)) * ν_non_omicron
   β_t_values_no_init_omicron = exp.(log(R₀_init_omicron) .+ cumsum(vec(log_R0_steps_non_centered) * σ_R0)) * ν_omicron
   prob = remake(prob1, u0 = log.(u0), p = [β_init_non_omicron, β_init_omicron, γ_non_omicron, γ_omicron, ν_non_omicron, ν_omicron, η_non_omicron, η_omicron, IHR_non_omicron, IHR_omicron], tspan = (0.0, obstimes[end]))
-  
+
   function param_affect_β!(integrator)
     ind_t = searchsortedfirst(param_change_times, integrator.t) # Find the index of param_change_times that contains the current timestep
     integrator.p[1] = β_t_values_no_init_non_omicron[ind_t] # Replace β with a new value from β_t_values_no_init_non_omicron
     integrator.p[2] = β_t_values_no_init_omicron[ind_t] # Replace β with a new value from β_t_values_no_init_omicron
   end
-  
+
   param_callback = PresetTimeCallback(param_change_times, param_affect_β!, save_positions = (false, false))
 
   if extra_ode_precision
-    sol = solve(prob, Tsit5(), callback = param_callback, saveat = obstimes, save_start = true, verbose = false, abstol = 1e-9, reltol = 1e-6)  
+    sol = solve(prob, Tsit5(), callback = param_callback, saveat = obstimes, save_start = true, verbose = false, abstol = 1e-9, reltol = 1e-6)
   else
     sol = solve(prob, Tsit5(), callback = param_callback, saveat = obstimes, save_start = true, verbose = false)
   end
-  
+
   if sol.retcode != :Success
     Turing.@addlogprob! -Inf
     return
@@ -295,10 +296,10 @@ prob1 = ODEProblem(seir_ode_log!,
       if (i < end_other_cases_time)
         data_est_other_cases[i] ~ NegativeBinomial2(max(other_cases_mean[i], 0.0), ϕ_cases)
         println("hello")
-      end 
-    else 
+      end
+    else
       data_est_other_cases[i] ~ NegativeBinomial2(max(other_cases_mean[i], 0.0), ϕ_cases)
-    end 
+    end
 
     data_est_omicron_cases[i] ~ NegativeBinomial2(max(omicron_cases_mean[i], 0.0), ϕ_cases)
     data_hospitalizations[i] ~ Poisson(max(hospitalizations_mean[i], 0.0))
@@ -389,13 +390,13 @@ my_model_forecast_missing = bayes_seihr(
 #   prior_samples_forecast_randn = augment_chains_with_forecast_samples(Chains(prior_samples, :parameters), my_model, my_model_forecast, "randn")
 #   prior_indices_to_keep = .!isnothing.(generated_quantities(my_model_forecast, prior_samples_forecast_randn));
 #   prior_samples_forecast_randn = ChainsCustomIndex(prior_samples_forecast_randn, prior_indices_to_keep);
-  
+
 #   wsave(joinpath(results_dir, "prior_samples.jld2"), @dict prior_samples)
-  
+
 #   Random.seed!(county_id)
 #   prior_predictive_randn = predict(my_model_forecast_missing, prior_samples_forecast_randn)
 #   CSV.write(joinpath(results_dir, "prior_predictive.csv"), DataFrame(prior_predictive_randn))
-  
+
 #   Random.seed!(county_id)
 #   gq_randn = get_gq_chains(my_model_forecast, prior_samples_forecast_randn);
 #   CSV.write(joinpath(results_dir, "prior_generated_quantities.csv"), DataFrame(gq_randn))

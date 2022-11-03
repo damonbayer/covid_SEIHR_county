@@ -5,6 +5,7 @@ using FileIO
 using CSV
 using DataFrames
 using Turing
+using LinearAlgebra
 using DifferentialEquations
 using LogExpFunctions
 using Random
@@ -61,8 +62,8 @@ my_model = bayes_seihr(
   data_est_omicron_cases,
   data_hospitalizations,
   data_est_other_tests,
-  data_est_omicron_tests,  
-  data_icu, 
+  data_est_omicron_tests,
+  data_icu,
   data_est_death,
   obstimes,
   param_change_times,
@@ -81,7 +82,7 @@ end
 
 MAP_init = optimize_many_MAP(my_model, 10, 1, true)[1]
 
-alg = Gibbs(NUTS(-1, 0.8, 
+alg = Gibbs(NUTS(-1, 0.8,
 :prop_omicron_only_init_non_centered,
 :dur_latent_non_centered_non_omicron,
 :dur_infectious_non_centered_non_omicron,

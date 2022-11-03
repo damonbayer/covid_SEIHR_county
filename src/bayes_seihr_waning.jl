@@ -8,7 +8,7 @@ prob1 = ODEProblem(seir_ode_log!,
   l = length(data_est_other_cases)
 
   # Priors
-  R0_params_non_centered ~ MvNormal(l + 3, 1) # +3 for sigma, non_omicron_init, omicron_init
+  R0_params_non_centered ~ MvNormal(l + 3, 1.0 * I) # +3 for sigma, non_omicron_init, omicron_init
   prop_omicron_only_init_non_centered ~ Normal()
   dur_latent_non_centered_non_omicron ~ Normal()
   dur_infectious_non_centered_non_omicron ~ Normal()
