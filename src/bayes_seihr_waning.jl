@@ -1,14 +1,14 @@
-prob1 = ODEProblem(seir_ode_log!,
+prob = ODEProblem{true}(seir_ode_log!,
   zeros(11),
   (0.0, obstimes[end]),
   ones(10))
 
-@model function bayes_seihr(data_est_other_cases, data_est_omicron_cases, data_hospitalizations,
+@model function bayes_seihr(prob, data_est_other_cases, data_est_omicron_cases, data_hospitalizations,
   data_est_other_tests, data_est_omicron_tests, data_icu, data_est_death, obstimes, param_change_times, extra_ode_precision, end_other_cases_time)
   l = length(data_est_other_cases)
 
   # Priors
-  R0_params_non_centered ~ MvNormal(l + 3, 1.0 * I) # +3 for sigma, non_omicron_init, omicron_init
+  R0_params_non_centered ~ MvNormal(Zeros(l + 3), I) # +3 for sigma, non_omicron_init, omicron_init
   prop_omicron_only_init_non_centered ~ Normal()
   dur_latent_non_centered_non_omicron ~ Normal()
   dur_infectious_non_centered_non_omicron ~ Normal()
@@ -82,14 +82,14 @@ prob1 = ODEProblem(seir_ode_log!,
   η_omicron = 1 / dur_hospitalized_omicron
 
   dur_waning_omicron = exp(dur_waning_non_centered_omicron * 0.1 + log(12))
-  κ = 1/dur_waning_omicron
+  κ = 1 / dur_waning_omicron
 
   dur_icu_non_omicron = exp(dur_icu_non_centered_non_omicron * 0.1 + log(1))
 
-  ω_non_omicron = 1/dur_icu_non_omicron
+  ω_non_omicron = 1 / dur_icu_non_omicron
 
   dur_icu_omicron = exp(dur_icu_non_centered_omicron * 0.1 + log(0.31))
-  ω_omicron = 1/dur_icu_omicron
+  ω_omicron = 1 / dur_icu_omicron
 
   HICUR_non_omicron = logistic(HICUR_non_centered_non_omicron * 0.2 - 1.32)
   HICUR_omicron = logistic(HICUR_non_centered_omicron * 0.2 - 1.69)
@@ -110,25 +110,23 @@ prob1 = ODEProblem(seir_ode_log!,
   I_non_omicron_init = I_init_non_centered_non_omicron * 0.05 + new_cases_other_initial * 10 / 3 # new_cases_in_week_prior_to_model_start * (5/3, 20/3)
   I_omicron_init = I_init_non_centered_omicron * 0.05 + news_cases_omicron_initial * 10 / 3 # new_cases_in_week_prior_to_model_start * (5/3, 20/3)
   H_non_omicron_init = hospitalizations_initial
-  H_omicron_init = 1
+  H_omicron_init = 1.0
   ICU_non_omicron_init = icu_initial
-  ICU_omicron_init = 1
-  D_non_omicron_init = 1
-  D_omicron_init = 1
-  R_init = 1
+  ICU_omicron_init = 1.0
+  D_non_omicron_init = 1.0
+  D_omicron_init = 1.0
+  R_init = 1.0
   C_non_omicron_init = I_non_omicron_init
   C_omicron_init = I_omicron_init
   S_init = popsize - (E_non_omicron_init + E_omicron_init + I_non_omicron_init + I_omicron_init + H_non_omicron_init + H_omicron_init + R_init + ICU_non_omicron_init + ICU_omicron_init + D_non_omicron_init + D_omicron_init)
   S_both_init = (1 - prop_omicron_only_init) * S_init
   S_omicron_only_init = prop_omicron_only_init * S_init
   u0 = [S_both_init, S_omicron_only_init, E_non_omicron_init, E_omicron_init, I_non_omicron_init, I_omicron_init, H_non_omicron_init, H_omicron_init, R_init, C_non_omicron_init, C_omicron_init,
-  ICU_non_omicron_init, ICU_omicron_init, D_non_omicron_init, D_omicron_init]
+    ICU_non_omicron_init, ICU_omicron_init, D_non_omicron_init, D_omicron_init]
 
   # Time-varying parameters
   β_t_values_no_init_non_omicron = exp.(log(R₀_init_non_omicron) .+ cumsum(vec(log_R0_steps_non_centered) * σ_R0)) * ν_non_omicron
   β_t_values_no_init_omicron = exp.(log(R₀_init_omicron) .+ cumsum(vec(log_R0_steps_non_centered) * σ_R0)) * ν_omicron
-  prob = remake(prob1, u0 = log.(u0), p = [β_init_non_omicron, β_init_omicron, γ_non_omicron, γ_omicron, ν_non_omicron, ν_omicron, η_non_omicron, η_omicron, IHR_non_omicron, IHR_omicron, κ,
-  HICUR_non_omicron, HICUR_omicron, ω_non_omicron, ω_omicron, ICUDR_non_omicron, ICUDR_omicron], tspan = (0.0, obstimes[end]))
 
   function param_affect_β!(integrator)
     ind_t = searchsortedfirst(param_change_times, integrator.t) # Find the index of param_change_times that contains the current timestep
@@ -136,26 +134,26 @@ prob1 = ODEProblem(seir_ode_log!,
     integrator.p[2] = β_t_values_no_init_omicron[ind_t] # Replace β with a new value from β_t_values_no_init_omicron
   end
 
-  param_callback = PresetTimeCallback(param_change_times, param_affect_β!, save_positions = (false, false))
+  param_callback = PresetTimeCallback(param_change_times, param_affect_β!, save_positions=(false, false))
 
-  if extra_ode_precision
-    sol = solve(prob, Tsit5(), callback = param_callback, saveat = obstimes, save_start = true, verbose = false, abstol = 1e-11, reltol = 1e-8)
-  else
-    sol = solve(prob, Tsit5(), callback = param_callback, saveat = obstimes, save_start = true, verbose = false, abstol = 1e-9, reltol = 1e-6)
-  end
+  abstol = extra_ode_precision ? 1e-11 : 1e-9
+  reltol = extra_ode_precision ? 1e-8 : 1e-6
+
+  sol = solve(prob, Tsit5(); callback=param_callback, saveat=obstimes, save_start=true, verbose=false, abstol=abstol, reltol=reltol, u0=log.(u0), p=[β_init_non_omicron, β_init_omicron, γ_non_omicron, γ_omicron, ν_non_omicron, ν_omicron, η_non_omicron, η_omicron, IHR_non_omicron, IHR_omicron, κ, HICUR_non_omicron, HICUR_omicron, ω_non_omicron, ω_omicron, ICUDR_non_omicron, ICUDR_omicron], tspan=(0.0, obstimes[end]))
 
   if sol.retcode != :Success
     Turing.@addlogprob! -Inf
     return
   end
+
   sol_reg_scale_array = exp.(Array(sol))
 
   sol_new_cases_other = sol_reg_scale_array[10, 2:end] - sol_reg_scale_array[10, 1:(end-1)]
   sol_new_cases_omicron = sol_reg_scale_array[11, 2:end] - sol_reg_scale_array[11, 1:(end-1)]
   sol_hospitalizations = sol_reg_scale_array[7, 2:end] + sol_reg_scale_array[8, 2:end]
   sol_icu = sol_reg_scale_array[12, 2:end] + sol_reg_scale_array[13, 2:end]
-  sol_death_other = sol_reg_scale_array[14, 2:end] - sol_reg_scale_array[14, 1:(end - 1)]
-  sol_death_omicron = sol_reg_scale_array[15, 2:end] - sol_reg_scale_array[15, 1:(end - 1)]
+  sol_death_other = sol_reg_scale_array[14, 2:end] - sol_reg_scale_array[14, 1:(end-1)]
+  sol_death_omicron = sol_reg_scale_array[15, 2:end] - sol_reg_scale_array[15, 1:(end-1)]
 
   other_cases_mean = sol_new_cases_other .* case_detection_rate_other
   omicron_cases_mean = sol_new_cases_omicron .* case_detection_rate_omicron
@@ -166,7 +164,7 @@ prob1 = ODEProblem(seir_ode_log!,
 
   for i in 1:l
     if (i < end_other_cases_time)
-    data_est_other_cases[i] ~ NegativeBinomial2(max(other_cases_mean[i], 0.0), ϕ_cases)
+      data_est_other_cases[i] ~ NegativeBinomial2(max(other_cases_mean[i], 0.0), ϕ_cases)
     end
     data_est_omicron_cases[i] ~ NegativeBinomial2(max(omicron_cases_mean[i], 0.0), ϕ_cases)
     data_hospitalizations[i] ~ NegativeBinomial2(max(hospitalizations_mean[i], 0.0), ϕ_hospitalizations)
@@ -178,65 +176,65 @@ prob1 = ODEProblem(seir_ode_log!,
   β_t_non_omicron = vcat(β_init_non_omicron, β_t_values_no_init_non_omicron)
   β_t_omicron = vcat(β_init_omicron, β_t_values_no_init_omicron)
   R₀_t_non_omicron = β_t_non_omicron / ν_non_omicron
-  R₀_t_omicron =  β_t_omicron / ν_omicron
+  R₀_t_omicron = β_t_omicron / ν_omicron
   S_both = sol_reg_scale_array[1, :]
   S_omicron_only = sol_reg_scale_array[2, :]
   R₀_t = max.(β_t_omicron / ν_omicron, β_t_non_omicron / ν_non_omicron .* S_both / popsize)
   Rₜ_t = R₀_t .* (S_both + S_omicron_only) / popsize
   return (
-    σ_R0 = σ_R0,
-    case_detection_rate_other = case_detection_rate_other,
-    case_detection_rate_omicron = case_detection_rate_omicron,
-    dur_latent_non_omicron_days = dur_latent_non_omicron * 7,
-    dur_latent_omicron_days = dur_latent_omicron * 7,
-    dur_infectious_non_omicron_days = dur_infectious_non_omicron * 7,
-    dur_infectious_omicron_days = dur_infectious_omicron * 7,
-    β_init_non_omicron = R₀_init_non_omicron * ν_non_omicron,
-    β_init_omicron = R₀_init_omicron * ν_omicron,
-    IHR_non_omicron = IHR_non_omicron,
-    IHR_omicron = IHR_omicron,
-    dur_hospitalized_non_omicron_days = dur_hospitalized_non_omicron * 7,
-    dur_hospitalized_omicron_days = dur_hospitalized_omicron * 7,
-    dur_waning_omicron_days = dur_waning_omicron * 7,
-    dur_icu_non_omicron_days = dur_icu_non_omicron * 7,
-    dur_icu_omicron_days = dur_icu_omicron * 7,
-    HICUR_non_omicron = HICUR_non_omicron,
-    HICUR_omicron = HICUR_omicron,
-    ICUDR_non_omicron = ICUDR_non_omicron,
-    ICUDR_omicron = ICUDR_omicron,
-    death_detection_rate = death_detection_rate,
-    ϕ_death = ϕ_death,
-    ϕ_cases = ϕ_cases,
-    ϕ_hospitalizations = ϕ_hospitalizations,
-    ϕ_icu = ϕ_icu,
-    β_t_non_omicron = β_t_non_omicron,
-    β_t_omicron = β_t_omicron,
-    R₀_t_non_omicron = R₀_t_non_omicron,
-    R₀_t_omicron = R₀_t_omicron,
-    R₀_t = R₀_t,
-    Rₜ_t = Rₜ_t,
-    S_both = S_both,
-    S_omicron_only = S_omicron_only,
-    E_non_omicron = sol_reg_scale_array[3, :],
-    E_omicron = sol_reg_scale_array[4, :],
-    I_non_omicron = sol_reg_scale_array[5, :],
-    I_omicron = sol_reg_scale_array[6, :],
-    H_non_omicron = sol_reg_scale_array[7, :],
-    H_omicron = sol_reg_scale_array[8, :],
-    R = sol_reg_scale_array[9, :],
-    C_non_omicron = sol_reg_scale_array[10, :],
-    C_omicron = sol_reg_scale_array[11, :],
-    sol_new_cases_other = sol_new_cases_other,
-    sol_new_cases_omicron = sol_new_cases_omicron,
-    sol_hospitalizations = sol_hospitalizations,
-    other_cases_mean = other_cases_mean,
-    omicron_cases_mean = omicron_cases_mean,
-    hospitalizations_mean = hospitalizations_mean,
-    ICU_non_omicron = sol_reg_scale_array[12, :],
-    ICU_omicron = sol_reg_scale_array[13, :] ,
-    D_non_omicron = sol_reg_scale_array[14, :],
-    D_omicron = sol_reg_scale_array[15, :],
-    icu_mean = icu_mean,
-    death_mean = death_mean
+    σ_R0=σ_R0,
+    case_detection_rate_other=case_detection_rate_other,
+    case_detection_rate_omicron=case_detection_rate_omicron,
+    dur_latent_non_omicron_days=dur_latent_non_omicron * 7,
+    dur_latent_omicron_days=dur_latent_omicron * 7,
+    dur_infectious_non_omicron_days=dur_infectious_non_omicron * 7,
+    dur_infectious_omicron_days=dur_infectious_omicron * 7,
+    β_init_non_omicron=R₀_init_non_omicron * ν_non_omicron,
+    β_init_omicron=R₀_init_omicron * ν_omicron,
+    IHR_non_omicron=IHR_non_omicron,
+    IHR_omicron=IHR_omicron,
+    dur_hospitalized_non_omicron_days=dur_hospitalized_non_omicron * 7,
+    dur_hospitalized_omicron_days=dur_hospitalized_omicron * 7,
+    dur_waning_omicron_days=dur_waning_omicron * 7,
+    dur_icu_non_omicron_days=dur_icu_non_omicron * 7,
+    dur_icu_omicron_days=dur_icu_omicron * 7,
+    HICUR_non_omicron=HICUR_non_omicron,
+    HICUR_omicron=HICUR_omicron,
+    ICUDR_non_omicron=ICUDR_non_omicron,
+    ICUDR_omicron=ICUDR_omicron,
+    death_detection_rate=death_detection_rate,
+    ϕ_death=ϕ_death,
+    ϕ_cases=ϕ_cases,
+    ϕ_hospitalizations=ϕ_hospitalizations,
+    ϕ_icu=ϕ_icu,
+    β_t_non_omicron=β_t_non_omicron,
+    β_t_omicron=β_t_omicron,
+    R₀_t_non_omicron=R₀_t_non_omicron,
+    R₀_t_omicron=R₀_t_omicron,
+    R₀_t=R₀_t,
+    Rₜ_t=Rₜ_t,
+    S_both=S_both,
+    S_omicron_only=S_omicron_only,
+    E_non_omicron=sol_reg_scale_array[3, :],
+    E_omicron=sol_reg_scale_array[4, :],
+    I_non_omicron=sol_reg_scale_array[5, :],
+    I_omicron=sol_reg_scale_array[6, :],
+    H_non_omicron=sol_reg_scale_array[7, :],
+    H_omicron=sol_reg_scale_array[8, :],
+    R=sol_reg_scale_array[9, :],
+    C_non_omicron=sol_reg_scale_array[10, :],
+    C_omicron=sol_reg_scale_array[11, :],
+    sol_new_cases_other=sol_new_cases_other,
+    sol_new_cases_omicron=sol_new_cases_omicron,
+    sol_hospitalizations=sol_hospitalizations,
+    other_cases_mean=other_cases_mean,
+    omicron_cases_mean=omicron_cases_mean,
+    hospitalizations_mean=hospitalizations_mean,
+    ICU_non_omicron=sol_reg_scale_array[12, :],
+    ICU_omicron=sol_reg_scale_array[13, :],
+    D_non_omicron=sol_reg_scale_array[14, :],
+    D_omicron=sol_reg_scale_array[15, :],
+    icu_mean=icu_mean,
+    death_mean=death_mean
   )
 end;

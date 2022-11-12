@@ -8,12 +8,12 @@ county = subset(CSV.read("data/county_id_key.csv", DataFrame), :id => ByRow(x ->
 dat = subset(CSV.read("data/cases_hospitalizations_by_county.csv", DataFrame), :county => ByRow(x -> x == county))
 
 initialization_values = subset(CSV.read("data/initialization_values.csv", DataFrame), :county => ByRow(x -> x == county))
-popsize = subset(CSV.read("data/county_pop.csv", DataFrame), :County => ByRow(x -> x == county))[!, :Population][1]
+const popsize = float(subset(CSV.read("data/county_pop.csv", DataFrame), :County => ByRow(x -> x == county))[!, :Population][1])
 
-news_cases_omicron_initial = initialization_values[1, :est_omicorn_cases]
-new_cases_other_initial = initialization_values[1, :est_other_cases]
-hospitalizations_initial = initialization_values[1, :hospitalizations]
-icu_initial = initialization_values[1, :icu]
+const news_cases_omicron_initial = initialization_values[1, :est_omicorn_cases]
+const new_cases_other_initial = initialization_values[1, :est_other_cases]
+const hospitalizations_initial = initialization_values[1, :hospitalizations]
+const icu_initial = initialization_values[1, :icu]
 
 obstimes = float(dat[:, :time])
 obstimes_forecast = vcat(obstimes, obstimes[end] .+ float.(1:n_forecast_times))

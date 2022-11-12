@@ -6,6 +6,7 @@ using CSV
 using DataFrames
 using Turing
 using LinearAlgebra
+using FillArrays
 using DifferentialEquations
 using LogExpFunctions
 using Random
@@ -35,7 +36,6 @@ savename_dict = Dict(:county_id => county_id)
 
 ## Control Parameters
 n_samples = 2_000
-# n_samples = 100
 n_chains = 4
 time_interval_in_days = 7
 
@@ -44,10 +44,10 @@ include(projectdir("src/load_process_data.jl"))
 
 ## Load overdisp priors_only
 overdisp_priors = CSV.read(datadir(string("overdisp_priors_countyid", county_id, ".csv")), DataFrame)
-ϕ_hosp_sd = overdisp_priors[overdisp_priors.labels .== "hosp", :sd][1]
-ϕ_hosp_mean = overdisp_priors[overdisp_priors.labels .== "hosp", :mean][1]
-ϕ_icu_sd = overdisp_priors[overdisp_priors.labels .== "icu", :sd][1]
-ϕ_icu_mean = overdisp_priors[overdisp_priors.labels .== "icu", :mean][1]
+const ϕ_hosp_sd = overdisp_priors[overdisp_priors.labels .== "hosp", :sd][1]
+const ϕ_hosp_mean = overdisp_priors[overdisp_priors.labels .== "hosp", :mean][1]
+const ϕ_icu_sd = overdisp_priors[overdisp_priors.labels .== "icu", :sd][1]
+const ϕ_icu_mean = overdisp_priors[overdisp_priors.labels .== "icu", :mean][1]
 ## Define Priors
 include(projectdir("src/prior_constants.jl"))
 
@@ -58,6 +58,7 @@ include(projectdir("src/seir_ode_log.jl"))
 include(projectdir("src/bayes_seihr_waning.jl"))
 
 my_model = bayes_seihr(
+  prob,
   data_est_other_cases,
   data_est_omicron_cases,
   data_hospitalizations,
