@@ -8,6 +8,7 @@ results_dir <- "results"
 
 case_reporting_delay_ecdf <- read_rds("data/case_reporting_delay_ecdf.rds")
 death_reporting_delay_ecdf <- read_rds("data/death_delay_ecdf.rds")
+county_region_key <- read_csv("data/county_region_key.csv")
 
 prop_omicron_county_dat <-
   read_csv("data/prop_omicron_county_dat.csv") %>%
@@ -50,6 +51,7 @@ hosp_url <- resources %>% filter(name == "Statewide Covid-19 Hospital County Dat
 
 cases <-
   read_csv(cases_deaths_url) %>%
+  filter(area_type == "County") %>%
   mutate(date = lubridate::ymd(date),
          deaths = as.integer(deaths),
          reported_cases = as.integer(reported_cases),
@@ -82,36 +84,16 @@ hosp <-
 
 county_pop <- read_csv("data/county_pop.csv") %>% rename_all(str_to_lower)
 
-full_dat <- full_join(cases, hosp) %>%
+full_dat <-
+  full_join(cases, hosp) %>%
   select(date, county, cases, tests, hospitalized_covid_patients, icu_covid_patients, deaths)
-
 
 time_interval_in_days <- 7
 
 earliest_date_elligible_to_report <- ymd("2021-12-12")
 latest_date <- max(full_dat$date, na.rm = T)
-# last_date_to_report <- latest_date - 10
 last_date_to_report <- latest_date - 2
 first_date_to_report <-  earliest_date_elligible_to_report + (as.numeric(last_date_to_report - earliest_date_elligible_to_report) %% time_interval_in_days) + 1
-
-# prop_omicron_model <- glm(prop_omicron ~ bs(date), data = variants_dat %>% head(-7), family = gaussian(link = "logit"))
-#
-# ggplot(data = variants_dat %>% head(-5), mapping = aes(date, prop_omicron)) +
-#   geom_point() +
-#   geom_smooth(method = "glm", formula = y ~ bs(x), method.args = list(family = gaussian(link = "logit")))
-
-
-cum_deaths <- cases %>%
-  drop_na() %>%
-  group_by(county) %>%
-  mutate(days_ago = as.numeric(latest_date - date)) %>%
-  mutate(death_est_prop_reported = death_reporting_delay_ecdf(days_ago)) %>%
-  mutate(est_deaths = round(deaths/ death_est_prop_reported)) %>%
-  mutate(cum_deaths = cumsum(deaths),
-         cum_est_deaths = cumsum(est_deaths)) %>%
-  ungroup() %>%
-  dplyr::select(date, county, cum_deaths, cum_est_deaths)
-
 
 dat <-
   full_dat %>%
@@ -124,10 +106,6 @@ dat <-
   mutate(est_cases = round(cases / est_prop_reported),
          est_tests = round(tests / est_prop_reported),
          est_deaths = round(deaths/ death_est_prop_reported)) %>%
-  # mutate(.,
-  #        prop_omicron_cases = predict(prop_omicron_model,
-  #                                     newdata = .,
-  #                                     type = "response")) %>%
   left_join(prop_omicron_county_dat) %>%
   mutate(est_omicron_cases = prop_omicron_cases * est_cases,
          est_other_cases = (1- prop_omicron_cases) * est_cases,
@@ -155,17 +133,23 @@ dat <-
          est_other_tests = if_else(est_other_tests == 0,  1, est_other_tests)) %>%
   left_join(cum_deaths, by = c("date", "county")) %>%
   mutate(prev_cum_deaths = cum_deaths - deaths,
-         prev_cum_est_deaths = cum_est_deaths - est_deaths)
+         prev_cum_est_deaths = cum_est_deaths - est_deaths) %>%
+  bind_rows(.,
+            left_join(., county_region_key) %>%
+              select(-county) %>%
+              group_by(region, date) %>%
+              summarize(across(everything(), sum), .groups = "drop") %>%
+              rename(county = region),
+            select(., -county) %>%
+              group_by(date) %>%
+              summarize(across(everything(), sum), .groups = "drop") %>%
+              mutate(county = "California"))
 
 initialization_values <-
   full_dat %>%
   drop_na() %>%
   filter(date >= first_date_to_report - 6,
          date <= first_date_to_report) %>%
-  # mutate(.,
-  #        prop_omicron_cases = predict(prop_omicron_model,
-  #                                     newdata = .,
-  #                                     type = "response")) %>%
   left_join(prop_omicron_county_dat) %>%
   mutate(days_ago = as.numeric(latest_date - date)) %>%
   mutate(est_prop_reported = case_reporting_delay_ecdf(days_ago)) %>%
@@ -180,7 +164,16 @@ initialization_values <-
             icu = last(icu_covid_patients)) %>%
   pivot_longer(-county) %>%
   mutate(value = if_else(value == 0, 1, value)) %>%
-  pivot_wider(county)
+  pivot_wider(county) %>%
+  bind_rows(.,
+            left_join(., county_region_key) %>%
+              select(-county) %>%
+              group_by(region) %>%
+              summarize(across(everything(), sum), .groups = "drop") %>%
+              rename(county = region),
+            select(., -county) %>%
+              summarize(across(everything(), sum), .groups = "drop") %>%
+              mutate(county = "California"))
 
 county_id_key <-
   dat %>%
