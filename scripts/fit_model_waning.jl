@@ -16,12 +16,7 @@ using Random
 using LineSearches
 using covid_SEIHR_county
 
-county_id =
-if length(ARGS) == 0
-  1
-else
-  parse(Int64, ARGS[1])
-end
+county_id = length(ARGS) == 0 ? 1 : parse(Int64, ARGS[1])
 
 priors_only = county_id == 0
 
@@ -71,8 +66,7 @@ my_model = bayes_seihr(
   false,
   end_other_cases_time)
 
-# Sample Posterior
-
+# Sample Prior
 if priors_only
   Random.seed!(county_id)
   prior_samples = sample(my_model, Prior(), MCMCThreads(), n_samples, n_chains)
@@ -80,41 +74,43 @@ if priors_only
   exit()
 end
 
-
 MAP_init = optimize_many_MAP(my_model, 10, 1, true)[1]
 
 alg = Gibbs(NUTS(-1, 0.8,
-:prop_omicron_only_init_non_centered,
-:dur_latent_non_centered_non_omicron,
-:dur_infectious_non_centered_non_omicron,
-:IHR_non_centered_non_omicron,
-:dur_hospitalized_non_centered_non_omicron,
-:dur_icu_non_centered_non_omicron,
-:HICUR_non_centered_non_omicron,
-:ICUDR_non_centered_non_omicron,
-:E_init_non_centered_non_omicron,
-:I_init_non_centered_non_omicron,
-:case_detection_rate_non_centered_other,
-:dur_latent_non_centered_omicron,
-:dur_infectious_non_centered_omicron,
-:IHR_non_centered_omicron,
-:dur_hospitalized_non_centered_omicron,
-:dur_icu_non_centered_omicron,
-:HICUR_non_centered_omicron,
-:ICUDR_non_centered_omicron,
-:dur_waning_non_centered_omicron,
-:E_init_non_centered_omicron,
-:I_init_non_centered_omicron,
-:case_detection_rate_non_centered_omicron,
-:death_detection_rate_non_centered,
-:ϕ_cases_non_centered,
-:ϕ_hospitalizations_non_centered,
-:ϕ_death_non_centered,
-:ϕ_icu_non_centered),
-ESS(:R0_params_non_centered))
+    :prop_omicron_only_init_non_centered,
+    :dur_latent_non_centered_non_omicron,
+    :dur_infectious_non_centered_non_omicron,
+    :IHR_non_centered_non_omicron,
+    :dur_hospitalized_non_centered_non_omicron,
+    :dur_icu_non_centered_non_omicron,
+    :HICUR_non_centered_non_omicron,
+    :ICUDR_non_centered_non_omicron,
+    :E_init_non_centered_non_omicron,
+    :I_init_non_centered_non_omicron,
+    :case_detection_rate_non_centered_other,
+    :dur_latent_non_centered_omicron,
+    :dur_infectious_non_centered_omicron,
+    :IHR_non_centered_omicron,
+    :dur_hospitalized_non_centered_omicron,
+    :dur_icu_non_centered_omicron,
+    :HICUR_non_centered_omicron,
+    :ICUDR_non_centered_omicron,
+    :dur_waning_non_centered_omicron,
+    :E_init_non_centered_omicron,
+    :I_init_non_centered_omicron,
+    :case_detection_rate_non_centered_omicron,
+    :death_detection_rate_non_centered,
+    :ϕ_cases_non_centered,
+    :ϕ_hospitalizations_non_centered,
+    :ϕ_death_non_centered,
+    :ϕ_icu_non_centered),
+  ESS(:R0_params_non_centered))
+
+# Sample Posterior
 Random.seed!(county_id)
+MAP_noise = [randn(length(MAP_init)) for x in 1:n_chains]
 
 Random.seed!(county_id)
-posterior_samples = sample(my_model, alg, MCMCThreads(), n_samples, n_chains, init_params = repeat([MAP_init], n_chains) .* collect(range(0.92, stop = 0.98, length = n_chains)))
+posterior_samples = sample(my_model, alg, MCMCThreads(), n_samples, n_chains, init_params=repeat([MAP_init], n_chains) * 0.95 + MAP_noise * 0.05)
 
 wsave(resultsdir("posterior_samples", savename("posterior_samples", savename_dict, "jld2")), @dict posterior_samples)
