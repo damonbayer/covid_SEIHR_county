@@ -40,11 +40,11 @@ n_forecast_times = 12
 include(projectdir("src/load_process_data.jl"))
 
 ## Load overdisp priors_only
-overdisp_priors = CSV.read(datadir(string("overdisp_priors_countyid", county_id, ".csv")), DataFrame)
-ϕ_hosp_sd = overdisp_priors[overdisp_priors.labels .== "hosp", :sd][1]
-ϕ_hosp_mean = overdisp_priors[overdisp_priors.labels .== "hosp", :mean][1]
-ϕ_icu_sd = overdisp_priors[overdisp_priors.labels .== "icu", :sd][1]
-ϕ_icu_mean = overdisp_priors[overdisp_priors.labels .== "icu", :mean][1]
+overdisp_priors = CSV.read(datadir(string("overdisp_priors/overdisp_priors_countyid=", county_id, ".csv")), DataFrame)
+const ϕ_hosp_sd = overdisp_priors[overdisp_priors.datastream .== "hosp", :sd][1]
+const ϕ_hosp_mean = overdisp_priors[overdisp_priors.datastream .== "hosp", :mean][1]
+const ϕ_icu_sd = overdisp_priors[overdisp_priors.datastream .== "icu", :sd][1]
+const ϕ_icu_mean = overdisp_priors[overdisp_priors.datastream .== "icu", :mean][1]
 
 ## Define Priors
 include(projectdir("src/prior_constants.jl"))

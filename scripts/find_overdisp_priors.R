@@ -3,6 +3,7 @@
 library(tidyverse)
 library(rstan)
 library(brms)
+library(fs)
 options(mc.cores = parallelly::availableCores(),
         brms.backend = "cmdstanr")
 rstan_options(auto_write = TRUE)
@@ -22,28 +23,19 @@ data <- read_csv("data/cases_hospitalizations_by_county.csv") %>%
 # find hospitalization priors ---------------------------------------------
 hosp_spline <- run_nb_spline(data = data,
                              response = "hosp")
-
 hosp_overdisp <- choose_kappa_params(hosp_spline)
-
 hosp_params <- hosp_overdisp$par
 
 # find icu priors ---------------------------------------------------------
 icu_spline <- run_nb_spline(data, response = "icu")
-
 icu_overdisp <- choose_kappa_params(icu_spline)
-
 icu_params <- icu_overdisp$par
 
 # save the results --------------------------------------------------------
-labels <- c("hosp", "icu")
+priors <-
+  tibble(param_type = c("mean", "sd"), hosp = hosp_params, icu = icu_params) %>%
+  pivot_longer(-param_type, names_to = "datastream") %>%
+  pivot_wider(names_from = param_type, values_from = value)
 
-priors <- rbind(hosp_params, icu_params) %>%
-          cbind(labels)
-
-priors <- data.frame(priors)
-
-colnames(priors) <- c("mean", "sd", "labels")
-rownames(priors) <- NULL
-
-file_name <- paste("overdisp_priors_countyid", indic, ".csv", sep = "")
-write_csv(priors, paste("data/", file_name, sep = ""))
+file_name <- path("data/overdisp_priors", str_c("overdisp_priors_countyid=", indic), ext = "csv")
+write_csv(priors, file_name)

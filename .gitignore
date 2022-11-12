@@ -89,6 +89,5 @@ Manifest.toml
 
 results
 .DS_Store
-Project.toml
 /.texpadtmp
-data/overdisp_priors_county*.csv
+data/overdisp_priors
