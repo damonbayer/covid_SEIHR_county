@@ -82,7 +82,7 @@ hosp <-
   mutate(hospitalized_covid_patients = hospitalized_covid_patients - icu_covid_patients) %>%
   mutate(hospitalized_covid_patients = ifelse(hospitalized_covid_patients < 0, 0, hospitalized_covid_patients))
 
-county_pop <- read_csv("data/county_pop.csv") %>% rename_all(str_to_lower)
+county_pop <- read_csv("data/county_pop.csv") %>% rename_with(str_to_lower)
 
 full_dat <-
   full_join(cases, hosp) %>%
@@ -94,6 +94,17 @@ earliest_date_elligible_to_report <- ymd("2021-12-12")
 latest_date <- max(full_dat$date, na.rm = T)
 last_date_to_report <- latest_date - 2
 first_date_to_report <-  earliest_date_elligible_to_report + (as.numeric(last_date_to_report - earliest_date_elligible_to_report) %% time_interval_in_days) + 1
+
+cum_deaths <- cases %>%
+  drop_na() %>%
+  group_by(county) %>%
+  mutate(days_ago = as.numeric(latest_date - date)) %>%
+  mutate(death_est_prop_reported = death_reporting_delay_ecdf(days_ago)) %>%
+  mutate(est_deaths = round(deaths/ death_est_prop_reported)) %>%
+  mutate(cum_deaths = cumsum(deaths),
+         cum_est_deaths = cumsum(est_deaths)) %>%
+  ungroup() %>%
+  select(date, county, cum_deaths, cum_est_deaths)
 
 dat <-
   full_dat %>%
@@ -137,11 +148,11 @@ dat <-
   bind_rows(.,
             left_join(., county_region_key) %>%
               select(-county) %>%
-              group_by(region, date) %>%
+              group_by(region, date, time) %>%
               summarize(across(everything(), sum), .groups = "drop") %>%
               rename(county = region),
             select(., -county) %>%
-              group_by(date) %>%
+              group_by(date, time) %>%
               summarize(across(everything(), sum), .groups = "drop") %>%
               mutate(county = "California"))
 
