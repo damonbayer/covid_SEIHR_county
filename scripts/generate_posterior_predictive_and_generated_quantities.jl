@@ -6,6 +6,7 @@ using CSV
 using DataFrames
 using Turing
 using LinearAlgebra
+using FillArrays
 using DifferentialEquations
 using LogExpFunctions
 using Random
@@ -56,6 +57,7 @@ include(projectdir("src/seir_ode_log.jl"))
 include(projectdir("src/bayes_seihr_waning.jl"))
 
 my_model = bayes_seihr(
+  prob,
   data_est_other_cases,
   data_est_omicron_cases,
   data_hospitalizations,
@@ -69,6 +71,7 @@ my_model = bayes_seihr(
   end_other_cases_time)
 
 my_model_forecast = bayes_seihr(
+  prob,
   data_est_other_cases_forecast,
   data_est_omicron_cases_forecast,
   data_hospitalizations_forecast,
@@ -82,6 +85,7 @@ my_model_forecast = bayes_seihr(
   end_other_cases_time)
 
 my_model_forecast_missing = bayes_seihr(
+  prob,
   missing_est_other_cases_forecast,
   missing_est_omicron_cases_forecast,
   missing_hospitalizations_forecast,

@@ -125,8 +125,8 @@ prob = ODEProblem{true}(seir_ode_log!,
     ICU_non_omicron_init, ICU_omicron_init, D_non_omicron_init, D_omicron_init]
 
   # Time-varying parameters
-  β_t_values_no_init_non_omicron = exp.(log(R₀_init_non_omicron) .+ cumsum(vec(log_R0_steps_non_centered) * σ_R0)) * ν_non_omicron
-  β_t_values_no_init_omicron = exp.(log(R₀_init_omicron) .+ cumsum(vec(log_R0_steps_non_centered) * σ_R0)) * ν_omicron
+  β_t_values_no_init_non_omicron = exp.(log(R₀_init_non_omicron) .+ cumsum(log_R0_steps_non_centered) * σ_R0) * ν_non_omicron
+  β_t_values_no_init_omicron = exp.(log(R₀_init_omicron) .+ cumsum(log_R0_steps_non_centered) * σ_R0) * ν_omicron
 
   function param_affect_β!(integrator)
     ind_t = searchsortedfirst(param_change_times, integrator.t) # Find the index of param_change_times that contains the current timestep

@@ -1,5 +1,6 @@
 module covid_SEIHR_county
 using Distributions
+using ForwardDiff
 using Turing
 using AxisArrays
 using MCMCChains
@@ -12,6 +13,21 @@ using DrWatson
 function NegativeBinomial2(μ, ϕ)
   p = 1 / (1 + μ / ϕ)
   r = ϕ
+
+  if p <= zero(p)
+    print("p <= 0: ", ForwardDiff.value(p))
+    p = nextfloat(zero(p))
+  end
+
+  if p >= one(p)
+    print("p >= 1: ", ForwardDiff.value(p))
+    p = prevfloat(one(p))
+  end
+
+  if r <= zero(r)
+    print("r <= 0 ", ForwardDiff.value(r))
+    r = nextfloat(zero(r))
+  end
 
   Distributions.NegativeBinomial(r, p)
 end

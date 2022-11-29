@@ -14,6 +14,7 @@ using ForwardDiff
 using Optim
 using Random
 using LineSearches
+using ForwardDiff
 using covid_SEIHR_county
 
 county_id = length(ARGS) == 0 ? 1 : parse(Int64, ARGS[1])
@@ -108,9 +109,6 @@ alg = Gibbs(NUTS(-1, 0.8,
 
 # Sample Posterior
 Random.seed!(county_id)
-MAP_noise = [randn(length(MAP_init)) for x in 1:n_chains]
-
-Random.seed!(county_id)
-posterior_samples = sample(my_model, alg, MCMCThreads(), n_samples, n_chains, init_params=repeat([MAP_init], n_chains) * 0.95 + MAP_noise * 0.05)
+posterior_samples = sample(my_model, alg, MCMCThreads(), n_samples, n_chains, init_params = repeat([MAP_init], n_chains) .* collect(range(0.92, stop = 0.98, length = n_chains)))
 
 wsave(resultsdir("posterior_samples", savename("posterior_samples", savename_dict, "jld2")), @dict posterior_samples)
