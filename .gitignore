@@ -91,3 +91,4 @@ results
 .DS_Store
 /.texpadtmp
 data/overdisp_priors
+/notes/prev_model_ci.csv
