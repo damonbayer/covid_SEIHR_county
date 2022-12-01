@@ -12,13 +12,11 @@ using Optim
 using LineSearches
 using covid_SEIHR_county
 
+mkpath(resultsdir())
 mkpath(resultsdir("prior_samples"))
 mkpath(resultsdir("posterior_samples"))
 
 county_id = length(ARGS) == 0 ? 1 : parse(Int64, ARGS[1])
-
-mkpath(resultsdir())
-mkpath(resultsdir("posterior_samples"))
 
 savename_dict = Dict(:county_id => county_id)
 
