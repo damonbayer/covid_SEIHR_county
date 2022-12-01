@@ -48,7 +48,7 @@ wsave(resultsdir("prior_samples", savename("prior_samples", savename_dict, "jld2
 ## Fit Posterior
 MAP_values = optimize_many_MAP(my_model, 20, 1, true)[1]
 Random.seed!(1)
-MAP_noise = [randn(length(MAP_values)) for _ in 1:n_chains]
+MAP_noise = [vcat(randn(length(MAP_values) - 2), rand(Exponential(), 2)) for _ in 1:n_chains]
 init_params = repeat([MAP_values], n_chains) * 0.95 + MAP_noise * 0.05
 
 alg = Gibbs(NUTS(-1, 0.8,
