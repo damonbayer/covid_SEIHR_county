@@ -57,8 +57,8 @@ tidy_generated_quantities_dir <- function(dir_path) {
     dir_ls(dir_path) %>%
     enframe(name = NULL, value = "full_path") %>%
     mutate(id = full_path %>%
-             str_extract("(?<=county_id=)\\d+") %>%
-             as.numeric()) %>%
+      str_extract("(?<=county_id=)\\d+") %>%
+      as.numeric()) %>%
     arrange(id) %>%
     left_join(county_id_pop %>% select(-population)) %>%
     mutate(results = map(full_path, tidy_generated_quantities_file)) %>%
@@ -74,12 +74,41 @@ tidy_generated_quantities_dir <- function(dir_path) {
     all_generated_quantities %>%
     filter(!is.na(date))
 
-  list(scalar_generated_quantities = scalar_generated_quantities,
-       vector_generated_quantities = vector_generated_quantities)
+  list(
+    scalar_generated_quantities = scalar_generated_quantities,
+    vector_generated_quantities = vector_generated_quantities
+  )
 }
 
 tidy_predictive_file <- function(file_path) {
-  read_csv(file_path) %>%
+  all_predictive_wide <- read_csv(file_path)
+
+  cumulative_deaths_summary <-
+    all_predictive_wide %>%
+    select(iteration, chain, starts_with("data_new_deaths")) %>%
+    pivot_longer(-c(iteration, chain)) %>%
+    mutate(
+      time = name %>%
+        str_extract("(?<=\\[)\\d+(?=\\])") %>%
+        as.numeric()
+    ) %>%
+    mutate(name = if_else(
+      str_detect(name, "\\[\\d+\\]"),
+      name %>%
+        str_extract("^.+(?=\\[)") %>%
+        str_remove("data_"),
+      name
+    )) %>%
+    group_by(iteration, chain) %>%
+    mutate(value = cumsum(value)) %>%
+    ungroup() %>%
+    mutate(name = "cumulative_deaths") %>%
+    select(-c(iteration, chain)) %>%
+    group_by(name, time) %>%
+    median_qi(.width = ci_widths)
+
+  non_cumulative_predictive_summary <-
+    all_predictive_wide %>%
     select(-c(iteration, chain)) %>%
     pivot_longer(everything()) %>%
     group_by(name) %>%
@@ -95,7 +124,13 @@ tidy_predictive_file <- function(file_path) {
         str_extract("^.+(?=\\[)") %>%
         str_remove("data_"),
       name
-    )) %>%
+    ))
+
+
+  bind_rows(
+    non_cumulative_predictive_summary,
+    cumulative_deaths_summary
+  ) %>%
     left_join(time_date_key) %>%
     select(name, date, everything(), -time) %>%
     arrange(name, date)
@@ -106,11 +141,11 @@ tidy_predictive_dir <- function(dir_path) {
     dir_ls(dir_path) %>%
     enframe(name = NULL, value = "full_path") %>%
     mutate(id = full_path %>%
-             str_extract("(?<=county_id=)\\d+") %>%
-             as.numeric()) %>%
+      str_extract("(?<=county_id=)\\d+") %>%
+      as.numeric()) %>%
     arrange(id) %>%
     left_join(county_id_pop %>% select(-population)) %>%
-    mutate(results = map(full_path, tidy_generated_quantities_file)) %>%
+    mutate(results = map(full_path, tidy_predictive_file)) %>%
     select(-full_path, -id) %>%
     unnest(results)
 }
@@ -130,7 +165,5 @@ write_csv(tidy_prior_generated_quantities$vector_generated_quantities, path(resu
 write_csv(tidy_posterior_generated_quantities$scalar_generated_quantities, path(results_dir, "tidy_scalar_posterior_generated_quantities", ext = "csv"))
 write_csv(tidy_posterior_generated_quantities$vector_generated_quantities, path(results_dir, "tidy_vector_posterior_generated_quantities", ext = "csv"))
 
-
 write_csv(tidy_prior_predictive, path(results_dir, "tidy_prior_predictive", ext = "csv"))
 write_csv(tidy_posterior_predictive, path(results_dir, "tidy_posterior_predictive", ext = "csv"))
-
