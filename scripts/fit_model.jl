@@ -8,8 +8,6 @@ using DifferentialEquations
 using LinearAlgebra
 using FillArrays
 using Random
-using Optim
-using LineSearches
 using covid_SEIHR_county
 
 mkpath(resultsdir())
