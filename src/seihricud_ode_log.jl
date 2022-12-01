@@ -23,7 +23,7 @@ function seihricud_ode_log!(du, u, p, t)
     waned_immunity = κ * R
 
     @inbounds begin
-        du[1] = -infection / S # S
+        du[1] = (waned_immunity - infection) / S # S
         du[2] = (infection - progression) / E # E
         du[3] = (progression - (hospitalization + non_hospitalized_recovery)) / I # I
         du[4] = (hospitalization - (hospitalized_recovery + icu_admission)) / H # H
