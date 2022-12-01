@@ -6,17 +6,16 @@
 #SBATCH -n 1          ## request 4 tasks (4 CPUs)
 #SBATCH -t 04:00:00   ## 1 hr run time limit
 #SBATCH --mem=3G
-#SBATCH -o update_projections_3-%A-%a.out
+#SBATCH -o update_projections_4-%A-%a.out
 #SBATCH --mail-type=begin,end
 #SBATCH --mail-user=bayerd@uci.edu
-#SBATCH --array=1-64
 
 module purge
-module load julia/1.8.2
+module load R
 cd //dfs6/pub/bayerd/covid_SEIHR_county
 
-if [ $SLURM_ARRAY_TASK_ID == 1 ]; then
-sbatch --depend=afterany:$SLURM_ARRAY_JOB_ID slurm_submissions/update_projections_4.sh
-fi
+Rscript scripts/tidy_posterior_predictive_and_generated_quantities.R
 
-julia --project scripts/generate_posterior_predictive_and_generated_quantities.jl $SLURM_ARRAY_TASK_ID
+# if [ $SLURM_ARRAY_TASK_ID == 1 ]; then
+# sbatch --depend=afterany:$SLURM_ARRAY_JOB_ID slurm_submissions/update_projections_3.sh
+# fi
