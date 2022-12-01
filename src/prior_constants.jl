@@ -1,8 +1,8 @@
-const R₀_init_non_centered_mean = 0.55
+const R₀_init_non_centered_mean = 0.2
 const R₀_init_non_centered_sd = 0.2
 
-const σ_R0_non_centered_mean = -3
-const σ_R0_non_centered_sd = 0.2
+const σ_R₀_non_centered_mean = -3
+const σ_R₀_non_centered_sd = 0.2
 
 const case_detection_rate_non_centered_mean = -1.78
 const case_detection_rate_non_centered_sd = 0.1
@@ -33,6 +33,17 @@ const ICUDR_non_centered_sd = 0.2
 
 const death_detection_rate_non_centered_mean = 2.3
 const death_detection_rate_non_centered_sd = 0.2
+
+const E_init_prop_non_centered_mean = logit(0.002)
+const E_init_prop_non_centered_sd = 0.4
+
+const I_init_prop_non_centered_mean = logit(0.0075)
+const I_init_prop_non_centered_sd = 0.6
+
+const R_init_prop_non_centered_mean = logit(0.1)
+const R_init_prop_non_centered_sd = 0.5
+
+const C_init = 1.0
 
 overdisp_priors = CSV.read(datadir(string("overdisp_priors/overdisp_priors_countyid=", county_id, ".csv")), DataFrame)
 const ϕ_hosp_non_centered_sd = overdisp_priors[overdisp_priors.datastream .== "hospitalized", :sd][1]
