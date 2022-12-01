@@ -5,7 +5,7 @@ library(fs)
 # Setup -------------------------------------------------------------------
 results_dir <- "results"
 
-ci_widths <- c(0.5, 0.8, 0.95)
+ci_widths <- c(0.5, 0.7, 0.9)
 time_interval_in_days <- 7
 n_forecast_times <- 12
 county_id_pop <- read_csv("data/county_id_pop.csv")
