@@ -4,7 +4,11 @@
     "Repositories": [
       {
         "Name": "CRAN",
-        "URL": "https://cran.rstudio.com"
+        "URL": "https://cloud.r-project.org"
+      },
+      {
+        "Name": "stan",
+        "URL": "https://mc-stan.org/r-packages"
       }
     ]
   },
@@ -386,7 +390,8 @@
     "cmdstanr": {
       "Package": "cmdstanr",
       "Version": "0.5.3",
-      "Source": "unknown",
+      "Source": "Repository",
+      "Repository": "stan",
       "Hash": "c91c8643a5d25fb7aebb1e8031f6cdca",
       "Requirements": [
         "R6",
