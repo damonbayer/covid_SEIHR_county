@@ -1,0 +1,65 @@
+id,county,population
+1,Alameda,1685886
+2,Alpine,1117
+3,Amador,38531
+4,Butte,217769
+5,Calaveras,44289
+6,Colusa,22593
+7,Contra Costa,1160099
+8,Del Norte,27558
+9,El Dorado,193098
+10,Fresno,1032227
+11,Glenn,29348
+12,Humboldt,134098
+13,Imperial,191649
+14,Inyo,18453
+15,Kern,927251
+16,Kings,156444
+17,Lake,64871
+18,Lassen,30065
+19,Los Angeles,10257557
+20,Madera,160089
+21,Marin,260800
+22,Mariposa,17795
+23,Mendocino,88439
+24,Merced,287420
+25,Modoc,9475
+26,Mono,13961
+27,Monterey,448732
+28,Napa,139652
+29,Nevada,98710
+30,Orange,3228519
+31,Placer,400434
+32,Plumas,18997
+33,Riverside,2468145
+34,Sacramento,1567975
+35,San Benito,64022
+36,San Bernardino,2217398
+37,San Diego,3370418
+38,San Francisco,892280
+39,San Joaquin,782545
+40,San Luis Obispo,278862
+41,San Mateo,778001
+42,Santa Barbara,456373
+43,Santa Clara,1967585
+44,Santa Cruz,273999
+45,Shasta,177925
+46,Sierra,3115
+47,Siskiyou,43956
+48,Solano,444255
+49,Sonoma,496668
+50,Stanislaus,562303
+51,Sutter,105747
+52,Tehama,65885
+53,Trinity,13354
+54,Tulare,484423
+55,Tuolumne,52351
+56,Ventura,852747
+57,Yolo,223612
+58,Yuba,79290
+59,Bay,8099225
+60,Central,4080765
+61,Lower Southern,11476129
+62,North,3700251
+63,Upper Southern,12772790
+64,California,40129160

@@ -4,9 +4,9 @@
 #SBATCH -A vminin_lab ## account to charge
 #SBATCH -N 1          ## run on a single node
 #SBATCH -n 1          ## request 4 tasks (4 CPUs)
-#SBATCH -t 00:15:00   ## 15 min run time limit
-#SBATCH --mem=5G 
-#SBATCH -o update_projections_1-%A-%a.out
+#SBATCH -t 04:00:00   ## 1 hr run time limit
+#SBATCH --mem=3G
+#SBATCH -o 5b_figures-%A-%a.out
 #SBATCH --mail-type=begin,end
 #SBATCH --mail-user=bayerd@uci.edu
 
@@ -14,6 +14,4 @@ module purge
 module load R
 cd //dfs6/pub/bayerd/covid_SEIHR_county
 
-Rscript scripts/pull_case_hospitalizations_data.R
-
-sbatch --depend=afterany:$SLURM_JOB_ID slurm_submissions/update_projections_2.sh
+Rscript scripts/make_figures.R
