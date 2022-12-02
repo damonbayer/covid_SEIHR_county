@@ -1,8 +1,9 @@
 library(tidyverse)
 library(tidybayes)
 library(fs)
-
+library(furrr)
 # Setup -------------------------------------------------------------------
+plan(multisession)
 results_dir <- "results"
 
 ci_widths <- c(0.5, 0.7, 0.9)
@@ -61,7 +62,7 @@ tidy_generated_quantities_dir <- function(dir_path) {
       as.numeric()) %>%
     arrange(id) %>%
     left_join(county_id_pop %>% select(-population)) %>%
-    mutate(results = map(full_path, tidy_generated_quantities_file)) %>%
+    mutate(results = future_map(full_path, tidy_generated_quantities_file)) %>%
     select(-full_path, -id) %>%
     unnest(results)
 
@@ -145,7 +146,7 @@ tidy_predictive_dir <- function(dir_path) {
       as.numeric()) %>%
     arrange(id) %>%
     left_join(county_id_pop %>% select(-population)) %>%
-    mutate(results = map(full_path, tidy_predictive_file)) %>%
+    mutate(results = future_map(full_path, tidy_predictive_file)) %>%
     select(-full_path, -id) %>%
     unnest(results)
 }
