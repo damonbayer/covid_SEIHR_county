@@ -90,8 +90,6 @@ latest_date <- max(cases$date, na.rm = TRUE)
 last_date_to_report <- latest_date - 2
 first_date_to_report <- earliest_date_elligible + (as.numeric(last_date_to_report - earliest_date_elligible) %% time_interval_in_days) + 1
 
-# Should look into re-estimating case and death delay distributions
-
 dat <-
   full_dat %>%
   filter(
