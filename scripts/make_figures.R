@@ -44,7 +44,14 @@ scalar_generated_quantities_summary <-
       mutate(distribution = "posterior"),
     read_csv(path(results_dir, "tidy_scalar_prior_generated_quantities", ext = "csv")) %>%
       mutate(distribution = "prior")
-  )
+  ) %>%
+  mutate(name = case_when(
+    name == "σ_R₀" ~ "sigma_R0",
+    name == "ϕ_cases" ~ "phi_cases",
+    name == "ϕ_deaths" ~ "phi_deaths",
+    name == "ϕ_hosp" ~ "phi_hosp",
+    name == "ϕ_icu" ~ "phi_icu",
+    TRUE ~ name))
 
 vector_generated_quantities_summary <-
   bind_rows(
@@ -52,7 +59,12 @@ vector_generated_quantities_summary <-
       mutate(distribution = "posterior"),
     read_csv(path(results_dir, "tidy_vector_prior_generated_quantities", ext = "csv")) %>%
       mutate(distribution = "prior")
-  )
+  ) %>%
+  mutate(name = case_when(
+    name == "R₀_t" ~ "R0_t",
+    name == "Rₜ_t" ~ "Rt_t",
+    name == "β_t" ~ "beta_t",
+    TRUE ~ name))
 
 make_posterior_predictive_plot <- function(target_place) {
   ggplot(mapping = aes(date, value)) +
