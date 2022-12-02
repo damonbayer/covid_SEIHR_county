@@ -116,9 +116,9 @@ prob = ODEProblem{true}(seihricud_ode_log!,
     # Likelihood calculations
     sol_reg_scale_array = exp.(Array(sol))
 
-    sol_hospitalizations = sol_reg_scale_array[4, 2:end] - sol_reg_scale_array[4, 1:(end-1)]
+    sol_hospitalizations = sol_reg_scale_array[4, 2:end]
     sol_new_cases = sol_reg_scale_array[6, 2:end] - sol_reg_scale_array[6, 1:(end-1)]
-    sol_icu = sol_reg_scale_array[7, 2:end] - sol_reg_scale_array[7, 1:(end-1)]
+    sol_icu = sol_reg_scale_array[7, 2:end]
     sol_new_deaths = sol_reg_scale_array[8, 2:end] - sol_reg_scale_array[8, 1:(end-1)]
 
     hospitalizations_mean = clamp.(sol_hospitalizations, min_neg_bin_μ, max_neg_bin_μ)
