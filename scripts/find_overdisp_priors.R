@@ -2,6 +2,7 @@ library(tidyverse)
 library(rstan)
 library(brms)
 library(fs)
+library(cmdstanr)
 options(
   mc.cores = parallelly::availableCores(),
   brms.backend = "cmdstanr"
