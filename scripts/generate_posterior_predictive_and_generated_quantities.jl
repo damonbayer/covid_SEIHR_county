@@ -41,8 +41,8 @@ my_model_forecast = bayes_seihricud(prob, data_est_new_cases_forecast, data_est_
 my_model_forecast_missing = bayes_seihricud(prob, missing_est_new_cases_forecast, missing_est_new_deaths_forecast, missing_hospitalizations_forecast, missing_icu_forecast, obstimes_forecast, param_change_times_forecast, true)
 
 ## Augment samples for forecasting
-augmented_prior_samples = augment_chains_with_forecast_samples(prior_samples, my_model, my_model_forecast, "randn")
-augmented_posterior_samples = augment_chains_with_forecast_samples(posterior_samples, my_model, my_model_forecast, "randn")
+augmented_prior_samples = augment_chains_with_forecast_samples(prior_samples, my_model, my_model_forecast, "zeros")
+augmented_posterior_samples = augment_chains_with_forecast_samples(posterior_samples, my_model, my_model_forecast, "zeros")
 
 ## Predictive
 Random.seed!(1)
