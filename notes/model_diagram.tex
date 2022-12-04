@@ -1,0 +1,28 @@
+\documentclass[convert]{standalone}
+\usepackage{quiver}
+\usetikzlibrary{shapes.geometric}
+%convert -density 600 -units pixelsperinch model_diagram.pdf model_diagram.png
+\begin{document}
+% https://q.uiver.app/?q=WzAsNyxbMCwxLCJTIl0sWzEsMSwiRSJdLFsyLDEsIkkiXSxbNCwxLCJSIl0sWzMsMCwiSCJdLFs0LDAsIklDVSJdLFs1LDAsIkQiXSxbMCwxXSxbMSwyXSxbMiw0XSxbNCw1XSxbNSw2XSxbNCwzXSxbNSwzXSxbMiwzXV0=
+\begin{tikzcd}[sep=scriptsize,
+	cells={nodes={%
+            ,ellipse
+            ,draw
+            }}]
+	&&& H & ICU & D \\
+	S & E & I &&& R
+	\arrow[from=2-1, to=2-2]
+	\arrow[from=2-2, to=2-3]
+	\arrow[from=2-3, to=1-4]
+	\arrow[from=1-4, to=1-5]
+	\arrow[from=1-5, to=1-6]
+	\arrow[from=1-4, to=2-6]
+	\arrow[from=1-5, to=2-6]
+	\arrow[from=2-3, to=2-6]
+	\arrow[curve={height=-45pt}, from=2-6, to=2-1]
+\end{tikzcd}
+\end{document}
+
+
+
+
