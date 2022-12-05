@@ -36,10 +36,10 @@ prob = ODEProblem{true}(seihricud_ode_log!,
     I_init_prop_non_centered ~ Normal()
     R_init_prop_non_centered ~ Normal()
 
+    ϕ_cases_non_centered ~ Normal()
     ϕ_hosp_non_centered ~ Normal()
     ϕ_icu_non_centered ~ Normal()
-    ϕ_cases_non_centered ~ Exponential()
-    ϕ_deaths_non_centered ~ Exponential()
+    ϕ_deaths_non_centered ~ Normal()
 
     # Centering tranformations
     R₀_init = exp(R₀_init_non_centered * R₀_init_non_centered_sd + R₀_init_non_centered_mean)
@@ -62,12 +62,10 @@ prob = ODEProblem{true}(seihricud_ode_log!,
     I_init_prop = logistic(I_init_prop_non_centered * I_init_prop_non_centered_sd + I_init_prop_non_centered_mean)
     R_init_prop = logistic(R_init_prop_non_centered * R_init_prop_non_centered_sd + R_init_prop_non_centered_mean)
 
+    ϕ_cases = clamp.(exp(ϕ_cases_non_centered * ϕ_cases_non_centered_sd + ϕ_cases_non_centered_mean), min_neg_bin_ϕ, max_neg_bin_ϕ)
     ϕ_hosp = clamp.(exp(ϕ_hosp_non_centered * ϕ_hosp_non_centered_sd + ϕ_hosp_non_centered_mean), min_neg_bin_ϕ, max_neg_bin_ϕ)
     ϕ_icu = clamp.(exp(ϕ_icu_non_centered * ϕ_icu_non_centered_sd + ϕ_icu_non_centered_mean), min_neg_bin_ϕ, max_neg_bin_ϕ)
-    ϕ_cases = clamp.(ϕ_cases_non_centered^-2, min_neg_bin_ϕ, max_neg_bin_ϕ)
-    ϕ_deaths = clamp.(ϕ_deaths_non_centered^-2, min_neg_bin_ϕ, max_neg_bin_ϕ)
-
-
+    ϕ_deaths = clamp.(exp(ϕ_deaths_non_centered * ϕ_deaths_non_centered_sd + ϕ_deaths_non_centered_mean), min_neg_bin_ϕ, max_neg_bin_ϕ)
 
     # Natural scale transformation
     γ = 1 / dur_latent

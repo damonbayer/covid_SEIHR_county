@@ -46,7 +46,11 @@ const R_init_prop_non_centered_sd = 0.5
 const C_init = 1.0
 
 overdisp_priors = CSV.read(datadir(string("overdisp_priors/overdisp_priors_countyid=", county_id, ".csv")), DataFrame)
+const ϕ_cases_non_centered_sd = overdisp_priors[overdisp_priors.datastream .== "cases", :sd][1]
+const ϕ_cases_non_centered_mean = overdisp_priors[overdisp_priors.datastream .== "cases", :mean][1]
 const ϕ_hosp_non_centered_sd = overdisp_priors[overdisp_priors.datastream .== "hospitalized", :sd][1]
 const ϕ_hosp_non_centered_mean = overdisp_priors[overdisp_priors.datastream .== "hospitalized", :mean][1]
 const ϕ_icu_non_centered_sd = overdisp_priors[overdisp_priors.datastream .== "icu", :sd][1]
 const ϕ_icu_non_centered_mean = overdisp_priors[overdisp_priors.datastream .== "icu", :mean][1]
+const ϕ_deaths_non_centered_sd = overdisp_priors[overdisp_priors.datastream .== "deaths", :sd][1]
+const ϕ_deaths_non_centered_mean = overdisp_priors[overdisp_priors.datastream .== "deaths", :mean][1]
