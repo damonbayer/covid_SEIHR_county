@@ -108,7 +108,7 @@ deaths_overdisp_sd <- sd(log(deaths_fit_overdisp_draws))
 # Save Results ------------------------------------------------------------
 priors <-
   tibble(
-    datastream = c("hospitalized", "icu"),
+    datastream = c("cases", "hospitalized", "icu", "deaths"),
     mean = c(cases_overdisp_mean, hosp_overdisp_mean, icu_overdisp_mean, deaths_overdisp_mean),
     sd = c(cases_overdisp_sd, hosp_overdisp_sd, icu_overdisp_sd, deaths_overdisp_sd)
   )
