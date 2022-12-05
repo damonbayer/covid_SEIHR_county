@@ -4,8 +4,8 @@ const R₀_init_non_centered_sd = 0.2
 const σ_R₀_non_centered_mean = -3
 const σ_R₀_non_centered_sd = 0.2
 
-const case_detection_rate_non_centered_mean = -1.78
-const case_detection_rate_non_centered_sd = 0.1
+const case_detection_rate_non_centered_mean = -2.9
+const case_detection_rate_non_centered_sd = 0.3
 
 const dur_latent_non_centered_mean = -1.5
 const dur_latent_non_centered_sd = 0.25
