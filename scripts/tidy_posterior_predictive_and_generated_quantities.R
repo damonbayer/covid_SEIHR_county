@@ -3,7 +3,8 @@ library(tidybayes)
 library(fs)
 library(furrr)
 # Setup -------------------------------------------------------------------
-plan(multisession)
+print(str_c(parallelly::availableCores(), " cores detected"))
+plan(strategy = multisession, workers = parallelly::availableCores())
 results_dir <- "results"
 
 ci_widths <- c(0.5, 0.7, 0.9)
