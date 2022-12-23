@@ -15,11 +15,10 @@ mkpath(resultsdir("prior_samples"))
 mkpath(resultsdir("posterior_samples"))
 
 county_id = length(ARGS) == 0 ? 1 : parse(Int64, ARGS[1])
-
 savename_dict = Dict(:county_id => county_id)
 
 ## Control Parameters
-n_samples = 2_000
+n_samples = 250
 n_chains = 4
 
 ## Load Data
@@ -47,25 +46,7 @@ Random.seed!(1)
 MAP_noise = [randn(length(MAP_values)) for _ in 1:n_chains]
 init_params = repeat([MAP_values], n_chains) * 0.95 + MAP_noise * 0.05
 
-alg = Gibbs(NUTS(-1, 0.8,
-        :dur_latent_non_centered,
-        :dur_infectious_non_centered,
-        :dur_hospitalized_non_centered,
-        :dur_waning_non_centered,
-        :dur_icu_non_centered,
-        :IHR_non_centered,
-        :HICUR_non_centered,
-        :ICUDR_non_centered,
-        :case_detection_rate_non_centered,
-        :death_detection_rate_non_centered,
-        :E_init_prop_non_centered,
-        :I_init_prop_non_centered,
-        :R_init_prop_non_centered,
-        :ϕ_hosp_non_centered,
-        :ϕ_icu_non_centered,
-        :ϕ_cases_non_centered,
-        :ϕ_deaths_non_centered),
-    ESS(:R₀_params_non_centered))
+alg = NUTS(-1, 0.8)
 
 Random.seed!(1)
 posterior_samples = sample(my_model,
