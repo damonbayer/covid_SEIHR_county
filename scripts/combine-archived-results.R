@@ -1,6 +1,9 @@
+library(dplyr)
 library(stringr)
 
-# specify column names for each format
+# Specify column names for each format, only used for reference
+# A new format may have name mismatches i.e. cum_death & cumulative_deaths
+
 format1 <- c(
   "date", "county", "quantile", "hosp_census_with_covid", "cases"
 )
@@ -39,16 +42,33 @@ name_details <- fs::path_ext_remove(str_split_fixed(
 
 archived_file_names_df <- data.frame(
   "file_names" = archived_file_names,
-  "update_date" = str_split_fixed(name_details, pattern = "-format", n = 2)[, 1],
+  "creation_date" = str_split_fixed(name_details, pattern = "-format", n = 2)[, 1],
   "format" = str_split_fixed(name_details, pattern = "-format", n = 2)[, 2]
 )
 
+all_forecasts <- readr::read_csv(
+  here::here("results-archive", paste0(archived_file_names_df$file_names[1])),
+  show_col_types = FALSE,
+  progress = FALSE
+) %>%
+  mutate(creation_date = archived_file_names_df$creation_date[1])
 
-single_forecast <- readr::read_csv(
-  here::here("results-archive", "results_calcat_format_2022-05-31-format1.csv"),
-  show_col_types = FALSE)
+for (i in 2:nrow(archived_file_names_df)) {
+  single_forecast <- readr::read_csv(
+    here::here("results-archive", paste0(archived_file_names_df$file_names[i])),
+    show_col_types = FALSE,
+    progress = FALSE
+  ) %>%
+    mutate(creation_date = archived_file_names_df$creation_date[i])
 
-all_forecasts <- single_forecast
+  if (archived_file_names_df$format[i] %in% 3:5) {
+    single_forecast <- rename(single_forecast, cumulative_deaths = cum_death)
+  }
 
-# combine data frames to have most one data frame for all forecasts
+  all_forecasts <- all_forecasts %>%
+    bind_rows(single_forecast)
 
+}
+
+# If you want to save the combined forecasts
+readr::write_csv(all_forecasts, here::here("results-archive", "combined_archived_forecasts.csv"))
