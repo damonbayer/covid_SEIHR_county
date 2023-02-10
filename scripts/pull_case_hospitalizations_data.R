@@ -99,7 +99,7 @@ dat <-
   mutate(days_ago = as.numeric(latest_date - date)) %>%
   mutate(
     cases_est_prop_reported = case_reporting_delay_ecdf(days_ago),
-    death_est_prop_reported = death_reporting_delay_ecdf(days_ago)
+    death_est_prop_reported = death_reporting_delay_ecdf(days_ago + 4)
   ) %>%
   mutate(
     est_cases = cases / cases_est_prop_reported,
