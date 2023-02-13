@@ -10,6 +10,7 @@
 #SBATCH --mail-type=begin,end
 #SBATCH --mail-user=bayerd@uci.edu
 #SBATCH --array=1-64
+#SBATCH --exclude=hpc3-15-29,hpc3-21-30
 
 module purge
 module load julia/1.8.5
