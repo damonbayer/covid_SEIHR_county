@@ -12,7 +12,7 @@
 
 module purge
 module load R
-cd //dfs6/pub/bayerd/covid_SEIHR_county
+cd //pub/bayerd/covid_SEIHR_county
 
 Rscript scripts/pull_case_hospitalizations_data.R
 

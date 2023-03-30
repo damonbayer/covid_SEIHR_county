@@ -13,6 +13,6 @@
 
 module purge
 module load R
-cd //dfs6/pub/bayerd/covid_SEIHR_county
+cd //pub/bayerd/covid_SEIHR_county
 
 Rscript --no-save  --no-save scripts/find_overdisp_priors.R $SLURM_ARRAY_TASK_ID

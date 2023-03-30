@@ -12,6 +12,6 @@
 
 module purge
 module load R
-cd //dfs6/pub/bayerd/covid_SEIHR_county
+cd //pub/bayerd/covid_SEIHR_county
 
 Rscript scripts/make_figures.R

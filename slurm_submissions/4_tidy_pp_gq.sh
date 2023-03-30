@@ -12,7 +12,7 @@
 
 module purge
 module load R
-cd //dfs6/pub/bayerd/covid_SEIHR_county
+cd //pub/bayerd/covid_SEIHR_county
 
 Rscript scripts/tidy_posterior_predictive_and_generated_quantities.R
 
