@@ -86,7 +86,11 @@ full_dat <-
   ))
 
 earliest_date_elligible <- ymd("2022-06-01")
-latest_date <- max(cases$date, na.rm = TRUE)
+latest_date <- full_dat %>%
+  count(date, wt = hospitalized) %>%
+  filter(n > 0) %>%
+  pull(date) %>%
+  max()
 last_date_to_report <- latest_date - 2
 first_date_to_report <- earliest_date_elligible + (as.numeric(last_date_to_report - earliest_date_elligible) %% time_interval_in_days) + 1
 
