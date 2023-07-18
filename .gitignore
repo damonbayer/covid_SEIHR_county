@@ -91,3 +91,4 @@ results
 /.texpadtmp
 data/overdisp_priors
 /notes/prev_model_ci.csv
+slurm_submissions/*.out

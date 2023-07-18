@@ -8,11 +8,11 @@
 #SBATCH --mem=60G
 #SBATCH -o 4_tidy_pp_gq-%A-%a.out
 #SBATCH --mail-type=begin,end
-#SBATCH --mail-user=bayerd@uci.edu
+#SBATCH --mail-user=abakis@uci.edu
 
 module purge
 module load R
-cd //pub/bayerd/covid_SEIHR_county
+cd /pub/abakis/GitHub/covid_SEIHR_county
 
 Rscript scripts/tidy_posterior_predictive_and_generated_quantities.R
 

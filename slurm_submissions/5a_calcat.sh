@@ -8,10 +8,10 @@
 #SBATCH --mem=3G
 #SBATCH -o 5a_calcat-%A-%a.out
 #SBATCH --mail-type=begin,end
-#SBATCH --mail-user=bayerd@uci.edu
+#SBATCH --mail-user=abakis@uci.edu
 
 module purge
 module load R
-cd //pub/bayerd/covid_SEIHR_county
+cd /pub/abakis/GitHub/covid_SEIHR_county
 
 Rscript scripts/format_results_for_calcat.R

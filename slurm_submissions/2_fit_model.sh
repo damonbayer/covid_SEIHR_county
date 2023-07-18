@@ -8,13 +8,13 @@
 #SBATCH --mem=5G
 #SBATCH -o 2_fit_model-%A-%a.out
 #SBATCH --mail-type=begin,end
-#SBATCH --mail-user=bayerd@uci.edu
+#SBATCH --mail-user=abakis@uci.edu
 #SBATCH --array=1-64
 #SBATCH --exclude=hpc3-15-29,hpc3-21-30
 
 module purge
 module load julia/1.8.5
-cd //pub/bayerd/covid_SEIHR_county
+cd /pub/abakis/GitHub/covid_SEIHR_county
 
 if [ $SLURM_ARRAY_TASK_ID == 1 ]; then
 sbatch --depend=afterany:$SLURM_ARRAY_JOB_ID slurm_submissions/3_gen_pp_gq.sh

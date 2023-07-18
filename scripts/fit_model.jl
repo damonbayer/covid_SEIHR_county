@@ -18,7 +18,8 @@ county_id = length(ARGS) == 0 ? 1 : parse(Int64, ARGS[1])
 savename_dict = Dict(:county_id => county_id)
 
 ## Control Parameters
-n_samples = 250
+#n_samples = 250
+n_samples = 2
 n_chains = 4
 
 ## Load Data

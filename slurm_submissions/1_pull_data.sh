@@ -8,11 +8,11 @@
 #SBATCH --mem=5G
 #SBATCH -o 1_pull_data-%A-%a.out
 #SBATCH --mail-type=begin,end
-#SBATCH --mail-user=bayerd@uci.edu
+#SBATCH --mail-user=abakis@uci.edu
 
 module purge
 module load R
-cd //pub/bayerd/covid_SEIHR_county
+cd /pub/abakis/GitHub/covid_SEIHR_county
 
 Rscript scripts/pull_case_hospitalizations_data.R
 
