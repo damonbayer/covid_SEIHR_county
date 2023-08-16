@@ -4,13 +4,15 @@
 #SBATCH -A vminin_lab ## account to charge
 #SBATCH -N 1          ## run on a single node
 #SBATCH -n 4          ## request 4 tasks (4 CPUs)
-#SBATCH -t 04:00:00   ## 1 hr run time limit
+#SBATCH -t 24:00:00   ## 1 hr run time limit
 #SBATCH --mem=5G
 #SBATCH -o 2_fit_model-%A-%a.out
 #SBATCH --mail-type=begin,end
 #SBATCH --mail-user=abakis@uci.edu
 #SBATCH --array=1-64
 #SBATCH --exclude=hpc3-15-29,hpc3-21-30
+#SBATCH --error=slurm-out/%x.%A.err
+#SBATCH --out=slurm-out/%x.%A.out
 
 module purge
 module load julia/1.8.5

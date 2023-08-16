@@ -10,6 +10,8 @@
 #SBATCH --mail-type=begin,end
 #SBATCH --mail-user=abakis@uci.edu
 #SBATCH --array=1-64
+#SBATCH --error=slurm-out/%x.%A.err
+#SBATCH --out=slurm-out/%x.%A.out
 
 module purge
 module load julia/1.8.5

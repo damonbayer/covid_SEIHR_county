@@ -9,6 +9,8 @@
 #SBATCH -o 5a_calcat-%A-%a.out
 #SBATCH --mail-type=begin,end
 #SBATCH --mail-user=abakis@uci.edu
+#SBATCH --error=slurm-out/%x.%A.err
+#SBATCH --out=slurm-out/%x.%A.out
 
 module purge
 module load R
