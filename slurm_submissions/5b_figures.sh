@@ -14,6 +14,6 @@
 
 module purge
 module load R
-cd /pub/abakis/GitHub/covid_SEIHR_county
+cd /pub/abakis/git/covid_SEIHR_county
 
 Rscript scripts/make_figures.R

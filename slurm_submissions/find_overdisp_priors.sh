@@ -15,6 +15,6 @@
 
 module purge
 module load R
-cd /pub/abakis/GitHub/covid_SEIHR_county
+cd /pub/abakis/git/covid_SEIHR_county
 
 Rscript --no-save  --no-save scripts/find_overdisp_priors.R $SLURM_ARRAY_TASK_ID

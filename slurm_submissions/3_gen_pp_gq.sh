@@ -14,8 +14,7 @@
 #SBATCH --out=slurm-out/%x.%A.out
 
 module purge
-module load julia/1.8.5
-cd /pub/abakis/GitHub/covid_SEIHR_county
+cd /pub/abakis/git/covid_SEIHR_county
 
 if [ $SLURM_ARRAY_TASK_ID == 1 ]; then
 sbatch --depend=afterany:$SLURM_ARRAY_JOB_ID slurm_submissions/4_tidy_pp_gq.sh

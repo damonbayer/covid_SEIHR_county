@@ -14,7 +14,7 @@
 
 module purge
 module load R
-cd /pub/abakis/GitHub/covid_SEIHR_county
+cd /pub/abakis/git/covid_SEIHR_county
 
 Rscript scripts/tidy_posterior_predictive_and_generated_quantities.R
 
