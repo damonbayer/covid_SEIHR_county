@@ -1,23 +1,19 @@
 #!/bin/bash
 
-#SBATCH -p standard   ## run on the standard partition
-#SBATCH -A vminin_lab ## account to charge
-#SBATCH -N 1          ## run on a single node
-#SBATCH -n 1          ## request 4 tasks (4 CPUs)
-#SBATCH -t 04:00:00   ## 1 hr run time limit
+#SBATCH -p stats.p
+#SBATCH -N 1
+#SBATCH -n 1
+#SBATCH -t 04:00:00
 #SBATCH --mem=3G
-#SBATCH -o 3_gen_pp_gq-%A-%a.out
-#SBATCH --mail-type=begin,end
-#SBATCH --mail-user=abakis@uci.edu
+#SBATCH --error=log/%x.%A.err
+#SBATCH --out=log/%x.%A.out
 #SBATCH --array=1-64
-#SBATCH --error=slurm-out/%x.%A.err
-#SBATCH --out=slurm-out/%x.%A.out
 
 module purge
-cd /pub/abakis/git/covid_SEIHR_county
+cd /home/abakis/git/covid_SEIHR_county
 
 if [ $SLURM_ARRAY_TASK_ID == 1 ]; then
 sbatch --depend=afterany:$SLURM_ARRAY_JOB_ID slurm_submissions/4_tidy_pp_gq.sh
 fi
 
-julia --project scripts/generate_posterior_predictive_and_generated_quantities.jl $SLURM_ARRAY_TASK_ID
+julia +1.8 --project scripts/generate_posterior_predictive_and_generated_quantities.jl $SLURM_ARRAY_TASK_ID

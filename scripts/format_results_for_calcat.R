@@ -21,7 +21,7 @@ generated_quantities_LEMMA_format <-
   mutate(quantile = round(quantile, digits = 2)) %>%
   select(-c(.width, value_type)) %>%
   pivot_wider(names_from = name, values_from = value) %>%
-  rename(Rt = Rₜ_t )
+  rename(Rt = "Rₜ_t" )
 
 posterior_predictive_LEMMA_format <-
   tidy_posterior_predictive %>%
