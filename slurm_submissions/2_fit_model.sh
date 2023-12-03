@@ -3,15 +3,16 @@
 #SBATCH -p stats.p
 #SBATCH -N 1
 #SBATCH -n 4
-#SBATCH -t 48:00:00
+#SBATCH -t 72:00:00
 #SBATCH --mem=5G
 #SBATCH --mail-type=end
 #SBATCH --mail-user=abakis@uci.edu
 #SBATCH --error=log/%x.%A.err
 #SBATCH --out=log/%x.%A.out
 #SBATCH --array=1-64
+#SBATCH --exclude=stats-5
 
-module purge
+#module purge
 cd /home/abakis/git/covid_SEIHR_county
 
 if [ $SLURM_ARRAY_TASK_ID == 1 ]; then

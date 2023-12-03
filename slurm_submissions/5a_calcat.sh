@@ -8,8 +8,8 @@
 #SBATCH --error=log/%x.%A.err
 #SBATCH --out=log/%x.%A.out
 
-module purge
-module load R/4.2.1
+#module purge
+#module load R/4.2.1
 cd /home/abakis/git/covid_SEIHR_county
 
 Rscript scripts/format_results_for_calcat.R
